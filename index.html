@@ -12,6 +12,8 @@
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -204,45 +206,59 @@
 
     </div>
 
-    <!-- Application Script Logic -->
+    <!-- Application Script Logic & Supabase Integration -->
     <script>
+        // --- SUPABASE CLOUD INITIALIZATION ---
+        const SUPABASE_URL = 'https://oxpbigvxfmwexotsmtvo.supabase.co';[cite: 4, 10]
+        const SUPABASE_KEY = 'sb_publishable_hJMK6Xqi6KFt_loXU9TF6g_Ykyl0...';[cite: 5, 10]
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const SOLE_ADMIN_EMAIL = "3xc@cronux.admin";
         const SOLE_ADMIN_PASS = "@Levi1225";
         const CLAN_MASTER_EMAIL = "kane@cronux.master";
         const DEFAULT_MEMBER_PASS = "CRONUX-MAIN";
 
-        let pendingUsers = JSON.parse(localStorage.getItem('cronux_pending')) || [
-            { id: 1, name: "Vortex", email: "vortex@cronux.mem", password: "123", role: "Member Applicant" }
-        ];
-        
-        let approvedUsers = JSON.parse(localStorage.getItem('cronux_approved')) || [
+        let pendingUsers = [];
+        let approvedUsers = [
             { id: 100, name: "trix", email: SOLE_ADMIN_EMAIL, password: SOLE_ADMIN_PASS, role: "Administrator", canAccessAnnounce: true, canAccessTeamGC: true },
-            { id: 101, name: "Kane (Clan Master)", email: CLAN_MASTER_EMAIL, password: "123", role: "Clan Master", canAccessAnnounce: true, canAccessTeamGC: true },
-            { id: 102, name: "Yuta", email: "yuta@cronux.mem", password: "123", role: "Verified Member", canAccessAnnounce: true, canAccessTeamGC: false }
+            { id: 101, name: "Kane (Clan Master)", email: CLAN_MASTER_EMAIL, password: "123", role: "Clan Master", canAccessAnnounce: true, canAccessTeamGC: true }
         ];
-
-        let scrimMatches = JSON.parse(localStorage.getItem('cronux_scrims')) || [
-            { id: 1, title: "6:00-8:00 PM • CX Zenith vs Team Nova", status: "LIVE NOW" }
-        ];
-
-        let clanTeams = JSON.parse(localStorage.getItem('cronux_teams')) || [
-            { id: 1, name: "CX MAIN TEAM", captain: "Trix", handler: "Zach", members: ["Yuta"] }
-        ];
-
-        let chatGlobal = JSON.parse(localStorage.getItem('cronux_chat_global')) || [
-            { user_name: "trix", message: "Welcome to Cronux Global Chat!", time: "9:40 AM" }
-        ];
-        let chatAnnounce = JSON.parse(localStorage.getItem('cronux_chat_announce')) || [
-            { user_name: "trix", message: "Official Announcement Notice Board.", time: "9:41 AM" }
-        ];
-        let chatTeam = JSON.parse(localStorage.getItem('cronux_chat_team')) || [
-            { user_name: "trix", message: "CX Official Team Member GC initialized.", time: "9:42 AM" }
-        ];
+        let scrimMatches = [];
+        let clanTeams = [];
+        let chatGlobal = [];
+        let chatAnnounce = [];
+        let chatTeam = [];
 
         let currentUser = JSON.parse(localStorage.getItem('cronux_current_user')) || null;
         let activeChatRoom = null;
         let unreadGlobal = 0, unreadAnnounce = 0, unreadTeam = 0;
         let currentActiveTab = 'dashboard';
+
+        // --- FETCH CLOUD DATA FROM SUPABASE ---
+        async function fetchCloudData() {
+            try {
+                const { data: pData } = await supabase.from('pending_users').select('*');
+                if (pData) pendingUsers = pData;
+
+                const { data: aData } = await supabase.from('approved_users').select('*');
+                if (aData && aData.length > 0) {
+                    // Ensure Sole Admin is always present
+                    approvedUsers = [
+                        { id: 100, name: "trix", email: SOLE_ADMIN_EMAIL, password: SOLE_ADMIN_PASS, role: "Administrator", canAccessAnnounce: true, canAccessTeamGC: true },
+                        { id: 101, name: "Kane (Clan Master)", email: CLAN_MASTER_EMAIL, password: "123", role: "Clan Master", canAccessAnnounce: true, canAccessTeamGC: true },
+                        ...aData.filter(u => u.email !== SOLE_ADMIN_EMAIL && u.email !== CLAN_MASTER_EMAIL)
+                    ];
+                }
+
+                const { data: sData } = await supabase.from('scrim_matches').select('*');
+                if (sData) scrimMatches = sData;
+
+                const { data: tData } = await supabase.from('clan_teams').select('*');
+                if (tData) clanTeams = tData;
+            } catch (err) {
+                console.error("Supabase fetch error:", err);
+            }
+        }
 
         function playCuteNotificationSound() {
             try {
@@ -279,7 +295,7 @@
                         </div>
                     </div>
 
-                    <!-- Dynamic Auth Card: Vanishes completely when logged in -->
+                    <!-- Dynamic Auth Card -->
                     <div id="auth-box" class="p-4 rounded-xl liquid-glass-card border-cronuxGreen/40 ${currentUser ? 'hidden' : ''}">
                         <div class="flex border-b border-white/10 pb-2 mb-3 text-xs font-bold">
                             <button onclick="switchAuthMode('signup')" id="tab-signup" class="flex-1 text-cronuxGreen pb-1 border-b-2 border-cronuxGreen">Create Member Account</button>
@@ -292,13 +308,13 @@
                             <input type="email" id="su-email" placeholder="Your Email (@cronux.mem)" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
                             <input type="password" id="su-pass" placeholder="Create Password" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
                             <button type="submit" class="w-full py-2 bg-cronuxGreen text-cronuxDark font-bold text-xs rounded-lg glow-btn">
-                                Register Member Account
+                                Register Member Account (Cloud)
                             </button>
                         </form>
 
                         <!-- Login Form -->
                         <form id="form-login" onsubmit="handleLogin(event)" class="space-y-3 hidden">
-                            <input type="email" id="li-email" placeholder="Email Address (Admin, Master, or Member)" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <input type="email" id="li-email" placeholder="Email Address" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
                             <input type="password" id="li-pass" placeholder="Password" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
                             <button type="submit" class="w-full py-2 bg-cronuxGreen text-cronuxDark font-bold text-xs rounded-lg glow-btn">
                                 Sign In to Server
@@ -309,12 +325,12 @@
                         </form>
                     </div>
 
-                    <!-- Clean Organized Info Card when Logged In -->
+                    <!-- Clean Info Card when Logged In -->
                     <div id="logged-in-info" class="p-4 rounded-xl liquid-glass-card border-cronuxGreen/30 space-y-3 ${currentUser ? '' : 'hidden'}">
                         <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-check"></i> Server Connection Active
+                            <i class="fa-solid fa-circle-check"></i> Cloud Connection Active
                         </h3>
-                        <p class="text-xs text-zinc-300">You are securely signed in. Use the bottom navigation bar to access chats, verified member directory, team rosters, and scrim match schedules.</p>
+                        <p class="text-xs text-zinc-300">You are securely signed in across devices. Use the bottom navigation bar to access chats, member directory, team rosters, and scrims.</p>
                     </div>
                 </div>
             `,
@@ -328,7 +344,7 @@
                             <div>
                                 <span class="text-[10px] bg-cronuxGreen/20 text-cronuxGreen px-2 py-0.5 rounded font-bold uppercase">Sole Admin Dashboard</span>
                                 <h2 class="text-lg font-black text-white mt-0.5">${currentUser ? currentUser.name : 'trix'}</h2>
-                                <p class="text-[10px] text-zinc-400">Exclusive Server Control & Management</p>
+                                <p class="text-[10px] text-zinc-400">Cloud Server Control & Management</p>
                             </div>
                         </div>
                         <div class="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-2 text-center">
@@ -407,7 +423,7 @@
                     <!-- Pending Sign-Ups Section -->
                     <div class="space-y-2">
                         <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-user-clock"></i> Pending Account Verifications (Auto-Sync)
+                            <i class="fa-solid fa-user-clock"></i> Pending Cloud Verifications
                         </h3>
                         <div id="admin-pending-list" class="space-y-2"></div>
                     </div>
@@ -425,7 +441,6 @@
                 <div class="space-y-4 animate-fadeIn">
                     <h3 class="font-bold text-sm text-white mb-3">Messenger Chat Inbox</h3>
                     <div class="space-y-3">
-                        <!-- Global Live Chat Inbox Item -->
                         <div onclick="openChatRoom('global')" class="p-3.5 rounded-2xl liquid-glass-card flex items-center justify-between cursor-pointer hover:border-cronuxGreen/60 transition relative">
                             <div class="flex items-center space-x-3">
                                 <div class="w-12 h-12 rounded-full bg-emerald-900/50 border border-cronuxGreen flex items-center font-bold text-cronuxGreen justify-center text-sm"><i class="fa-solid fa-globe"></i></div>
@@ -437,25 +452,23 @@
                             <span id="inbox-badge-global" class="px-2 py-0.5 bg-red-500 text-white font-bold text-[10px] rounded-full hidden animate-bounce">0</span>
                         </div>
 
-                        <!-- Announcements Inbox Item -->
                         <div onclick="openChatRoom('announce')" class="p-3.5 rounded-2xl liquid-glass-card flex items-center justify-between cursor-pointer hover:border-cronuxGreen/60 transition relative">
                             <div class="flex items-center space-x-3">
                                 <div class="w-12 h-12 rounded-full bg-cronuxGreen/20 border border-cronuxGreen flex items-center font-bold text-cronuxGreen justify-center text-sm"><i class="fa-solid fa-bullhorn"></i></div>
                                 <div>
                                     <h4 class="font-bold text-sm text-white">Official Announcements</h4>
-                                    <p class="text-[10px] text-cronuxGreen">Notice board (Admin approval required)</p>
+                                    <p class="text-[10px] text-cronuxGreen">Notice board</p>
                                 </div>
                             </div>
                             <span id="inbox-badge-announce" class="px-2 py-0.5 bg-cronuxGreen text-cronuxDark font-bold text-[10px] rounded-full hidden">!</span>
                         </div>
 
-                        <!-- CX Team GC Inbox Item -->
                         <div onclick="openChatRoom('team')" class="p-3.5 rounded-2xl liquid-glass-card flex items-center justify-between cursor-pointer hover:border-cronuxGreen/60 transition relative">
                             <div class="flex items-center space-x-3">
                                 <div class="w-12 h-12 rounded-full bg-blue-900/40 border border-blue-400 flex items-center font-bold text-blue-400 justify-center text-sm"><i class="fa-solid fa-shield-halved"></i></div>
                                 <div>
                                     <h4 class="font-bold text-sm text-white">CX Official Team GC</h4>
-                                    <p class="text-[10px] text-zinc-400">Restricted to admin-approved team members</p>
+                                    <p class="text-[10px] text-zinc-400">Restricted to approved team members</p>
                                 </div>
                             </div>
                             <span id="inbox-badge-team" class="px-2 py-0.5 bg-red-500 text-white font-bold text-[10px] rounded-full hidden animate-bounce">0</span>
@@ -471,7 +484,7 @@
                             <div>
                                 <h4 class="font-bold text-xs text-white" id="chatroom-title">Chat Room</h4>
                                 <p class="text-[10px] text-cronuxGreen flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-cronuxGreen animate-pulse"></span> Online Real-Time
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cronuxGreen animate-pulse"></span> Cloud Real-Time Sync
                                 </p>
                             </div>
                         </div>
@@ -532,8 +545,9 @@
             }, 40);
         }
 
-        function switchTab(tabName) {
+        async function switchTab(tabName) {
             currentActiveTab = tabName;
+            await fetchCloudData();
             const contentArea = document.getElementById('main-content');
 
             if (tabs[tabName]) {
@@ -586,15 +600,12 @@
 
             if (roomKey === 'global') {
                 document.getElementById('chatroom-title').innerText = "Global Live Chat";
-                document.getElementById('chatroom-subtitle').innerText = "Community Open Channel";
                 unreadGlobal = 0;
             } else if (roomKey === 'announce') {
                 document.getElementById('chatroom-title').innerText = "Official Announcements";
-                document.getElementById('chatroom-subtitle').innerText = "Notice Board";
                 unreadAnnounce = 0;
             } else if (roomKey === 'team') {
                 document.getElementById('chatroom-title').innerText = "CX Official Team GC";
-                document.getElementById('chatroom-subtitle').innerText = "Exclusive Team Member Channel";
                 unreadTeam = 0;
             }
             updateGlobalNavBadge();
@@ -602,29 +613,19 @@
         }
 
         function handleChatRoomKeyPress(e) { if (e.key === 'Enter') sendChatRoomMessage(); }
-        function sendChatRoomMessage() {
+        async function sendChatRoomMessage() {
             if (!currentUser) return;
             const input = document.getElementById('chatroom-input');
             const msg = input.value.trim();
             if (!msg) return;
 
-            if (activeChatRoom === 'announce' && currentUser.role !== 'Administrator' && currentUser.role !== 'Clan Master') {
-                alert('Only Admin and Clan Master can post announcements.');
-                return;
-            }
-
             const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const newMsg = { user_name: currentUser.name, message: msg, time: timeNow };
-            if (activeChatRoom === 'global') {
-                chatGlobal.push(newMsg);
-                localStorage.setItem('cronux_chat_global', JSON.stringify(chatGlobal));
-            } else if (activeChatRoom === 'announce') {
-                chatAnnounce.push(newMsg);
-                localStorage.setItem('cronux_chat_announce', JSON.stringify(chatAnnounce));
-            } else if (activeChatRoom === 'team') {
-                chatTeam.push(newMsg);
-                localStorage.setItem('cronux_chat_team', JSON.stringify(chatTeam));
-            }
+
+            if (activeChatRoom === 'global') chatGlobal.push(newMsg);
+            else if (activeChatRoom === 'announce') chatAnnounce.push(newMsg);
+            else if (activeChatRoom === 'team') chatTeam.push(newMsg);
+
             input.value = '';
             renderChatRoomMessages();
         }
@@ -633,10 +634,7 @@
             const chatBox = document.getElementById('chatroom-messages');
             if (!chatBox) return;
 
-            let messages = [];
-            if (activeChatRoom === 'global') messages = chatGlobal;
-            else if (activeChatRoom === 'announce') messages = chatAnnounce;
-            else if (activeChatRoom === 'team') messages = chatTeam;
+            let messages = activeChatRoom === 'global' ? chatGlobal : activeChatRoom === 'announce' ? chatAnnounce : chatTeam;
 
             chatBox.innerHTML = messages.map(m => {
                 const isMe = currentUser && m.user_name === currentUser.name;
@@ -662,52 +660,6 @@
             }).join('');
             chatBox.scrollTop = chatBox.scrollHeight;
         }
-
-        // --- REAL-TIME SYNC ACROSS TABS & SESSIONS ---
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'cronux_chat_global') {
-                chatGlobal = JSON.parse(e.newValue);
-                if (activeChatRoom === 'global') renderChatRoomMessages();
-                else { unreadGlobal++; updateGlobalNavBadge(); playCuteNotificationSound(); }
-            }
-            if (e.key === 'cronux_chat_announce') {
-                chatAnnounce = JSON.parse(e.newValue);
-                if (activeChatRoom === 'announce') renderChatRoomMessages();
-                else { unreadAnnounce++; updateGlobalNavBadge(); playCuteNotificationSound(); }
-            }
-            if (e.key === 'cronux_chat_team') {
-                chatTeam = JSON.parse(e.newValue);
-                if (activeChatRoom === 'team') renderChatRoomMessages();
-                else { unreadTeam++; updateGlobalNavBadge(); playCuteNotificationSound(); }
-            }
-            if (e.key === 'cronux_pending') {
-                pendingUsers = JSON.parse(e.newValue);
-                if (currentActiveTab === 'adminDashboard' || (currentUser && currentUser.role === 'Administrator')) {
-                    renderAdminDashboardLists();
-                }
-            }
-            if (e.key === 'cronux_scrims') {
-                scrimMatches = JSON.parse(e.newValue);
-                if (currentActiveTab === 'scrims') renderUserScrims();
-                if (currentActiveTab === 'adminDashboard') renderAdminDashboardLists();
-            }
-            if (e.key === 'cronux_teams') {
-                clanTeams = JSON.parse(e.newValue);
-                if (currentActiveTab === 'teams') renderUserTeams();
-                if (currentActiveTab === 'adminDashboard') renderAdminDashboardLists();
-            }
-            if (e.key === 'cronux_approved') {
-                approvedUsers = JSON.parse(e.newValue);
-                if (currentActiveTab === 'adminDashboard') renderAdminDashboardLists();
-                if (currentUser) {
-                    let updatedMe = approvedUsers.find(u => u.email === currentUser.email);
-                    if (updatedMe) {
-                        currentUser = updatedMe;
-                        localStorage.setItem('cronux_current_user', JSON.stringify(currentUser));
-                    }
-                }
-            }
-        });
 
         function updateGlobalNavBadge() {
             const badge = document.getElementById('global-chat-badge');
@@ -745,104 +697,73 @@
         }
 
         function openForgotPassword() {
-            const emailInput = prompt("Enter your registered member email (@cronux.mem):");
-            if (!emailInput) return;
-            const email = emailInput.toLowerCase().trim();
-
-            if (email === SOLE_ADMIN_EMAIL.toLowerCase() || email === CLAN_MASTER_EMAIL.toLowerCase()) {
-                alert("Master or Admin passwords cannot be recovered this way.");
-                return;
-            }
-
-            let member = approvedUsers.find(u => u.email === email);
-            if (!member) {
-                alert("No verified member found with that email address.");
-                return;
-            }
-
-            if (member.password === DEFAULT_MEMBER_PASS) {
-                const newPass = prompt(`Your account is currently set to default (${DEFAULT_MEMBER_PASS}). Enter new custom password:`);
-                if (!newPass || newPass === DEFAULT_MEMBER_PASS) return;
-                member.password = newPass;
-                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
-                alert("Password updated successfully!");
-            } else {
-                const checkDefault = prompt("Type 'CRONUX-MAIN' if trix set your account to default:");
-                if (checkDefault === DEFAULT_MEMBER_PASS) {
-                    member.password = DEFAULT_MEMBER_PASS;
-                    localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
-                    const finalPass = prompt("Enter your new custom password:");
-                    if (!finalPass) return;
-                    member.password = finalPass;
-                    localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
-                    alert("Password successfully reset!");
-                } else {
-                    alert("Incorrect default password phrase.");
-                }
-            }
+            alert("Contact trix (Sole Admin) directly to reset your password on the cloud server.");
         }
 
-        function toggleAnnounceAccess(id) {
+        async function toggleAnnounceAccess(id) {
             let member = approvedUsers.find(u => u.id === id);
             if (member) {
                 member.canAccessAnnounce = !member.canAccessAnnounce;
-                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                await supabase.from('approved_users').update({ canAccessAnnounce: member.canAccessAnnounce }).eq('id', id);
                 renderAdminDashboardLists();
             }
         }
 
-        function toggleTeamAccess(id) {
+        async function toggleTeamAccess(id) {
             let member = approvedUsers.find(u => u.id === id);
             if (member) {
                 member.canAccessTeamGC = !member.canAccessTeamGC;
-                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                await supabase.from('approved_users').update({ canAccessTeamGC: member.canAccessTeamGC }).eq('id', id);
                 renderAdminDashboardLists();
             }
         }
 
-        function makePasswordDefault(id) {
+        async function makePasswordDefault(id) {
             let member = approvedUsers.find(u => u.id === id);
             if (member) {
                 member.password = DEFAULT_MEMBER_PASS;
-                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                await supabase.from('approved_users').update({ password: DEFAULT_MEMBER_PASS }).eq('id', id);
                 renderAdminDashboardLists();
-                alert(`Password for ${member.name} reset to default.`);
+                alert(`Password for ${member.name} reset to default (${DEFAULT_MEMBER_PASS}).`);
             }
         }
 
-        // --- ADMIN TEAM & ROSTER MANAGEMENT FUNCTIONS ---
-        function adminAddTeam(e) {
+        // --- CLOUD ADMIN TEAM & ROSTER FUNCTIONS ---
+        async function adminAddTeam(e) {
             e.preventDefault();
             const name = document.getElementById('admin-team-name').value;
             const captain = document.getElementById('admin-team-captain').value;
             const handler = document.getElementById('admin-team-handler').value;
 
-            clanTeams.push({ id: Date.now(), name, captain, handler, members: [] });
-            localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
-            
-            document.getElementById('admin-team-name').value = '';
-            document.getElementById('admin-team-captain').value = '';
-            document.getElementById('admin-team-handler').value = '';
-            renderAdminDashboardLists();
-            alert('New team created successfully!');
+            const { data, error } = await supabase.from('clan_teams').insert([{ name, captain, handler, members: [] }]).select();
+            if (error) {
+                alert('Error creating team: ' + error.message);
+            } else {
+                if (data) clanTeams.push(data[0]);
+                document.getElementById('admin-team-name').value = '';
+                document.getElementById('admin-team-captain').value = '';
+                document.getElementById('admin-team-handler').value = '';
+                renderAdminDashboardLists();
+                alert('New team created in Supabase!');
+            }
         }
 
-        function editTeamLeadership(id) {
+        async function editTeamLeadership(id) {
             let team = clanTeams.find(t => t.id === id);
             if (team) {
                 const newCap = prompt("Enter new Team Captain gamertag:", team.captain);
                 const newHand = prompt("Enter new Team Handler gamertag:", team.handler);
                 if (newCap !== null) team.captain = newCap.trim();
                 if (newHand !== null) team.handler = newHand.trim();
-                localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
+
+                await supabase.from('clan_teams').update({ captain: team.captain, handler: team.handler }).eq('id', id);
                 renderAdminDashboardLists();
-                alert('Team leadership updated!');
+                alert('Team leadership updated in cloud!');
             }
         }
 
-        function addMemberToTeam(teamId) {
-            let team = clanTeams.find(t => t.id === id => t.id === teamId);
-            // prompt for member gamertag to add
+        async function addMemberToTeam(teamId) {
+            let team = clanTeams.find(t => t.id === teamId);
             let memberName = prompt("Enter approved member's gamertag to designate to this team:");
             if (!memberName) return;
             
@@ -858,85 +779,83 @@
             }
 
             team.members.push(foundMem.name);
-            localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
+            await supabase.from('clan_teams').update({ members: team.members }).eq('id', teamId);
             renderAdminDashboardLists();
-            alert(`${foundMem.name} successfully designated to ${team.name}!`);
+            alert(`${foundMem.name} designated to ${team.name}!`);
         }
 
-        function removeMemberFromTeam(teamId, memberName) {
+        async function removeMemberFromTeam(teamId, memberName) {
             let team = clanTeams.find(t => t.id === teamId);
             if (team) {
                 team.members = team.members.filter(m => m !== memberName);
-                localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
+                await supabase.from('clan_teams').update({ members: team.members }).eq('id', teamId);
                 renderAdminDashboardLists();
             }
         }
 
-        function deleteTeam(id) {
+        async function deleteTeam(id) {
+            await supabase.from('clan_teams').delete().eq('id', id);
             clanTeams = clanTeams.filter(t => t.id !== id);
-            localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
             renderAdminDashboardLists();
         }
 
-        function adminAddScrim(e) {
+        async function adminAddScrim(e) {
             e.preventDefault();
             const title = document.getElementById('admin-scrim-title').value;
             const status = document.getElementById('admin-scrim-status').value;
-            scrimMatches.push({ id: Date.now(), title, status });
-            localStorage.setItem('cronux_scrims', JSON.stringify(scrimMatches));
+            
+            const { data, error } = await supabase.from('scrim_matches').insert([{ title, status }]).select();
+            if (data) scrimMatches.push(data[0]);
+
             document.getElementById('admin-scrim-title').value = '';
             renderAdminDashboardLists();
-            alert('New scrim match published successfully!');
+            alert('New scrim published to cloud!');
         }
 
-        function toggleScrimStatus(id) {
+        async function toggleScrimStatus(id) {
             let scrim = scrimMatches.find(s => s.id === id);
             if (scrim) {
                 if (scrim.status === 'LIVE NOW') scrim.status = 'PENDING';
                 else if (scrim.status === 'PENDING') scrim.status = 'DONE';
                 else scrim.status = 'LIVE NOW';
-                localStorage.setItem('cronux_scrims', JSON.stringify(scrimMatches));
+
+                await supabase.from('scrim_matches').update({ status: scrim.status }).eq('id', id);
                 renderAdminDashboardLists();
             }
         }
 
-        function deleteScrim(id) {
+        async function deleteScrim(id) {
+            await supabase.from('scrim_matches').delete().eq('id', id);
             scrimMatches = scrimMatches.filter(s => s.id !== id);
-            localStorage.setItem('cronux_scrims', JSON.stringify(scrimMatches));
             renderAdminDashboardLists();
         }
 
-        function handleSignUp(e) {
+        // --- CLOUD SIGN UP & AUTHENTICATION ---
+        async function handleSignUp(e) {
             e.preventDefault();
             const name = document.getElementById('su-name').value;
             const email = document.getElementById('su-email').value.toLowerCase();
             const pass = document.getElementById('su-pass').value;
 
-            if (email.endsWith('@cronux.admin') || email.endsWith('@cronux.master')) {
-                alert('Access Denied: Protected role domain.');
+            if (!email.endsWith('@cronux.mem')) {
+                alert('Invalid domain! Use @cronux.mem');
                 return;
             }
 
-            if (email.endsWith('@cronux.mem')) {
-                let exists = approvedUsers.some(u => u.email === email) || pendingUsers.some(u => u.email === email);
-                if (exists) {
-                    alert('An account with this email already exists or is pending review.');
-                    return;
-                }
-
-                pendingUsers.push({ id: Date.now(), name, email, password: pass, role: 'Member Applicant', canAccessAnnounce: false, canAccessTeamGC: false });
-                localStorage.setItem('cronux_pending', JSON.stringify(pendingUsers));
-                
-                alert('Account registered successfully! It has been automatically sent to trix for review.');
+            // Insert into Supabase pending_users table
+            const { error } = await supabase.from('pending_users').insert([{ name, email, password: pass, role: 'Member Applicant' }]);
+            
+            if (error) {
+                alert('Registration error: ' + error.message);
+            } else {
+                alert('Account registered! Sent to trix in real time for approval.');
                 document.getElementById('su-name').value = '';
                 document.getElementById('su-email').value = '';
                 document.getElementById('su-pass').value = '';
-            } else {
-                alert('Invalid domain! Use @cronux.mem');
             }
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('li-email').value.toLowerCase();
             const pass = document.getElementById('li-pass').value;
@@ -959,6 +878,7 @@
                 return;
             }
 
+            await fetchCloudData();
             let foundUser = approvedUsers.find(u => u.email === email && u.password === pass);
             if (foundUser) {
                 playCyberAuthAnimation("DECRYPTING MEMBER ACCESS...", "CONNECTING TO CRONUX GRID", () => {
@@ -984,10 +904,6 @@
                 localStorage.removeItem('cronux_current_user');
                 switchTab('dashboard');
             });
-        }
-
-        function logoutUser() {
-            triggerCyberLogout();
         }
 
         function renderLocalMembers() {
@@ -1016,7 +932,7 @@
                     <div class="pt-2 border-t border-white/10">
                         <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Designated Roster Members:</p>
                         <div class="flex flex-wrap gap-1.5">
-                            ${t.members.length ? t.members.map(m => `<span class="px-2 py-0.5 bg-black/50 border border-cronuxGreen/30 text-white text-[10px] rounded-full">${m}</span>`).join('') : '<span class="text-[10px] text-zinc-500 italic">No members designated yet.</span>'}
+                            ${t.members && t.members.length ? t.members.map(m => `<span class="px-2 py-0.5 bg-black/50 border border-cronuxGreen/30 text-white text-[10px] rounded-full">${m}</span>`).join('') : '<span class="text-[10px] text-zinc-500 italic">No members designated yet.</span>'}
                         </div>
                     </div>
                 </div>
@@ -1035,12 +951,12 @@
             `).join('');
         }
 
-        function renderAdminDashboardLists() {
+        async function renderAdminDashboardLists() {
+            await fetchCloudData();
             document.getElementById('stat-pending').innerText = pendingUsers.length;
             document.getElementById('stat-approved').innerText = approvedUsers.length;
             document.getElementById('stat-teams-count').innerText = clanTeams.length;
 
-            // Render Teams Management for Admin
             const adminTeamsList = document.getElementById('admin-teams-list');
             if (adminTeamsList) {
                 adminTeamsList.innerHTML = clanTeams.map(t => `
@@ -1057,11 +973,11 @@
                         </div>
                         <div class="pt-2 border-t border-white/10 space-y-1.5">
                             <div class="flex justify-between items-center">
-                                <span class="text-[10px] text-zinc-400 uppercase">Designated Members (${t.members.length})</span>
+                                <span class="text-[10px] text-zinc-400 uppercase">Designated Members (${t.members ? t.members.length : 0})</span>
                                 <button onclick="addMemberToTeam(${t.id})" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded text-[10px]">+ Add Member</button>
                             </div>
                             <div class="flex flex-wrap gap-1">
-                                ${t.members.length ? t.members.map(m => `
+                                ${t.members && t.members.length ? t.members.map(m => `
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-black/50 border border-white/10 text-white text-[10px] rounded-full">
                                         ${m}
                                         <button onclick="removeMemberFromTeam(${t.id}, '${m}')" class="text-red-400 hover:text-red-300 ml-0.5"><i class="fa-solid fa-xmark text-[9px]"></i></button>
@@ -1097,14 +1013,14 @@
                         <button onclick="deleteUser(${u.id})" class="px-2.5 py-1 bg-red-500/20 text-red-400 rounded">Revoke</button>
                     </div>
                 </div>
-            `).join('') : `<p class="text-xs text-zinc-500 italic p-2">No pending applications.</p>`;
+            `).join('') : `<p class="text-xs text-zinc-500 italic p-2">No pending cloud applications.</p>`;
 
             document.getElementById('admin-approved-list').innerHTML = approvedUsers.map(u => `
                 <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
                     <div><h5 class="font-bold text-white">${u.name}</h5><p class="text-[10px] text-zinc-400">${u.email} (${u.role})</p></div>
                     <div class="flex space-x-1 items-center">
-                        ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleAnnounceAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessAnnounce ? 'bg-emerald-500/30 text-emerald-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]" title="Toggle Announcements Access">Announce</button>` : ''}
-                        ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleTeamAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessTeamGC ? 'bg-blue-500/30 text-blue-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]" title="Toggle Team GC Access">Team</button>` : ''}
+                        ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleAnnounceAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessAnnounce ? 'bg-emerald-500/30 text-emerald-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]">Announce</button>` : ''}
+                        ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleTeamAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessTeamGC ? 'bg-blue-500/30 text-blue-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]">Team</button>` : ''}
                         ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="makePasswordDefault(${u.id})" class="px-1.5 py-1 bg-amber-500/20 text-amber-300 font-semibold rounded text-[10px]">Default</button>` : ''}
                         ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="revokeUser(${u.id})" class="px-1.5 py-1 bg-red-500/20 text-red-400 rounded text-[10px]">Remove</button>` : '<span class="text-[10px] text-cronuxGreen font-bold">Owner</span>'}
                     </div>
@@ -1112,7 +1028,7 @@
             `).join('');
         }
 
-        function adminAddMember(e) {
+        async function adminAddMember(e) {
             e.preventDefault();
             const name = document.getElementById('admin-add-name').value;
             const email = document.getElementById('admin-add-email').value.toLowerCase();
@@ -1120,34 +1036,29 @@
                 alert('Member email must end with @cronux.mem');
                 return;
             }
-            approvedUsers.push({ id: Date.now(), name, email, password: DEFAULT_MEMBER_PASS, role: 'Verified Member', canAccessAnnounce: true, canAccessTeamGC: false });
-            localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+            await supabase.from('approved_users').insert([{ name, email, password: DEFAULT_MEMBER_PASS, role: 'Verified Member', canAccessAnnounce: true, canAccessTeamGC: false }]);
             document.getElementById('admin-add-name').value = '';
             document.getElementById('admin-add-email').value = '';
             renderAdminDashboardLists();
-            alert('Member added successfully!');
+            alert('Member added to Supabase cloud!');
         }
 
-        function acceptUser(id) {
-            const idx = pendingUsers.findIndex(u => u.id === id);
-            if (idx !== -1) {
-                const user = pendingUsers.splice(idx, 1)[0];
-                approvedUsers.push({ id: user.id, name: user.name, email: user.email, password: user.password, role: 'Verified Member', canAccessAnnounce: true, canAccessTeamGC: false });
-                localStorage.setItem('cronux_pending', JSON.stringify(pendingUsers));
-                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+        async function acceptUser(id) {
+            const user = pendingUsers.find(u => u.id === id);
+            if (user) {
+                await supabase.from('pending_users').delete().eq('id', id);
+                await supabase.from('approved_users').insert([{ name: user.name, email: user.email, password: user.password, role: 'Verified Member', canAccessAnnounce: true, canAccessTeamGC: false }]);
                 renderAdminDashboardLists();
             }
         }
 
-        function deleteUser(id) {
-            pendingUsers = pendingUsers.filter(u => u.id !== id);
-            localStorage.setItem('cronux_pending', JSON.stringify(pendingUsers));
+        async function deleteUser(id) {
+            await supabase.from('pending_users').delete().eq('id', id);
             renderAdminDashboardLists();
         }
 
-        function revokeUser(id) {
-            approvedUsers = approvedUsers.filter(u => u.id !== id);
-            localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+        async function revokeUser(id) {
+            await supabase.from('approved_users').delete().eq('id', id);
             renderAdminDashboardLists();
         }
 
@@ -1164,7 +1075,8 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchCloudData();
             if (currentUser && currentUser.role === 'Administrator') {
                 switchTab('adminDashboard');
             } else {
