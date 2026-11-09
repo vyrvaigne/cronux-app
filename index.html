@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRONUX - Official Clan X Community App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cronuxGreen: '#00FF88',
+                        cronuxDark: '#070B09',
+                        cronuxCard: 'rgba(18, 30, 22, 0.65)',
+                        cronuxBorder: 'rgba(0, 255, 136, 0.15)'
+                    },
+                    keyframes: {
+                        liquidPulse: {
+                            '0%, 100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 20px rgba(0, 255, 136, 0.3)) brightness(1)' },
+                            '50%': { transform: 'scale(1.06)', filter: 'drop-shadow(0 0 40px rgba(0, 255, 136, 0.7)) brightness(1.2)' }
+                        },
+                        cyberGlitch: {
+                            '0%': { transform: 'translate(0)' },
+                            '20%': { transform: 'translate(-3px, 3px)', filter: 'hue-rotate(90deg)' },
+                            '40%': { transform: 'translate(-3px, -3px)', filter: 'contrast(200%)' },
+                            '60%': { transform: 'translate(3px, 3px)', filter: 'hue-rotate(-90deg)' },
+                            '80%': { transform: 'translate(3px, -3px)' },
+                            '100%': { transform: 'translate(0)' }
+                        }
+                    },
+                    animation: {
+                        'liquid-logo': 'liquidPulse 2.5s infinite ease-in-out',
+                        'cyber-glitch': 'cyberGlitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 255, 136, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 136, 0.5); }
+        
+        body {
+            background-color: #030504;
+            background-image: radial-gradient(circle at 50% 20%, #0d2317 0%, #030504 70%);
+        }
+
+        .liquid-glass-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(18, 30, 22, 0.6) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .liquid-glass-panel {
+            background: rgba(12, 22, 16, 0.7);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.5), inset 0 1px 2px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .liquid-glass-header {
+            background: rgba(7, 11, 9, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .liquid-glass-nav {
+            background: rgba(10, 16, 12, 0.8);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+        }
+
+        .glow-btn {
+            background: linear-gradient(135deg, #00FF88 0%, #00cc6a 100%);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glow-btn:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.7);
+            transform: translateY(-1px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="text-white font-sans antialiased flex justify-center items-center min-h-screen selection:bg-cronuxGreen selection:text-cronuxDark">
+
+    <!-- Cyber Game Authentication Overlay Animation Screen -->
+    <div id="cyber-auth-overlay" class="absolute inset-0 w-full max-w-md mx-auto h-[844px] bg-[#030504]/95 backdrop-blur-3xl z-50 flex flex-col justify-center items-center p-8 border-4 border-cronuxBorder rounded-[40px] hidden opacity-0 transition-all duration-300">
+        <div class="relative p-4 rounded-full liquid-glass-panel mb-6 animate-cyber-glitch">
+            <div class="absolute inset-0 bg-cronuxGreen/40 rounded-full blur-xl animate-ping"></div>
+            <img src="logoapp.png.jpg" alt="CRONUX Logo" class="w-24 h-24 object-cover rounded-full border-2 border-cronuxGreen relative z-10">
+        </div>
+        <div class="text-center space-y-2 w-full max-w-xs">
+            <h2 id="cyber-auth-title" class="text-lg font-black tracking-widest text-cronuxGreen font-mono uppercase">ACCESSING NEURAL LINK...</h2>
+            <p id="cyber-auth-sub" class="text-[10px] text-zinc-400 font-mono tracking-wider">BYPASSING FIREWALL SECURITIES</p>
+            <div class="w-full h-1.5 bg-black/60 rounded-full overflow-hidden p-0.5 border border-cronuxGreen/40 mt-4">
+                <div id="cyber-progress-bar" class="h-full bg-cronuxGreen rounded-full w-0 transition-all duration-100 shadow-[0_0_15px_#00FF88]"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Splash Loading Screen -->
+    <div id="splash-screen" class="absolute inset-0 w-full max-w-md mx-auto h-[844px] bg-[#070B09]/95 backdrop-blur-2xl z-50 flex flex-col justify-between items-center py-16 px-6 border-4 border-cronuxBorder rounded-[40px] transition-all duration-700 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+        <div class="text-center pt-8">
+            <span class="text-[10px] uppercase font-bold tracking-[0.3em] text-zinc-400">Clan X Community</span>
+            <h2 class="text-xs text-cronuxGreen tracking-widest mt-1 font-mono">OFFICIAL APP v1.0</h2>
+        </div>
+
+        <div class="flex flex-col items-center space-y-6">
+            <div class="relative p-3 rounded-full liquid-glass-panel">
+                <div class="absolute inset-0 bg-cronuxGreen/20 rounded-full blur-2xl animate-pulse"></div>
+                <img src="logoapp.png.jpg" alt="CRONUX Logo" class="w-32 h-32 object-cover rounded-full border border-white/20 relative z-10 animate-liquid-logo shadow-[inset_0_2px_6px_rgba(255,255,255,0.4)]">
+            </div>
+            <div class="text-center space-y-1">
+                <h1 class="text-2xl font-black tracking-wider bg-gradient-to-r from-white via-cronuxGreen to-white bg-clip-text text-transparent">CRONUX</h1>
+                <p class="text-xs text-zinc-300 italic">"Cronux doesn't follow, Cronux leads."</p>
+            </div>
+        </div>
+
+        <div class="w-full max-w-xs space-y-2 pb-6">
+            <div class="flex justify-between text-[11px] text-zinc-400 font-mono">
+                <span id="loading-status">INITIALIZING SYSTEMS...</span>
+                <span id="loading-percent">0%</span>
+            </div>
+            <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/10 shadow-inner">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-400 to-cronuxGreen rounded-full w-0 transition-all duration-75 shadow-[0_0_12px_#00FF88]"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Device Frame Container -->
+    <div id="app-container" class="w-full max-w-md h-[844px] bg-cronuxDark border-4 border-cronuxBorder rounded-[40px] shadow-2xl flex flex-col relative overflow-hidden opacity-0 transition-all duration-700 pointer-events-none">
+        
+        <!-- Top Status Bar -->
+        <div class="flex justify-between items-center px-6 pt-3 pb-2 text-xs text-zinc-400 select-none z-30 bg-[#070B09]/70 backdrop-blur-xl border-b border-white/5">
+            <span>9:41</span>
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-signal"></i>
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-battery-full text-cronuxGreen"></i>
+            </div>
+        </div>
+
+        <!-- App Header -->
+        <header class="flex justify-between items-center px-5 py-3 border-b border-white/10 liquid-glass-header z-20">
+            <div class="flex items-center space-x-3">
+                <img src="logoapp.png.jpg" alt="CRONUX Logo" class="w-10 h-10 object-cover rounded-full border border-white/20 shadow-[0_0_10px_rgba(0,255,136,0.5)]">
+                <div>
+                    <h1 class="font-black tracking-wider text-lg bg-gradient-to-r from-white to-cronuxGreen bg-clip-text text-transparent">CRONUX</h1>
+                    <p class="text-[10px] text-zinc-400 uppercase tracking-widest font-mono">Clan X Community</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="logout-btn" onclick="triggerCyberLogout()" class="p-2 rounded-full text-red-400 hover:text-red-300 transition text-xs hidden" title="Log Out">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Scrollable Content Area -->
+        <main id="main-content" class="flex-1 overflow-y-auto pb-28 p-5 space-y-6 scroll-smooth">
+            <!-- Dynamically Loaded Tabs Go Here -->
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav id="bottom-nav" class="absolute bottom-0 left-0 right-0 h-20 liquid-glass-nav border-t border-white/10 backdrop-blur-2xl flex justify-around items-center px-2 z-30 hidden">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center text-cronuxGreen transition-all duration-300">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Home</span>
+            </button>
+            <button onclick="switchTab('chats')" id="nav-chats" class="nav-btn flex flex-col items-center text-zinc-400 hover:text-cronuxGreen transition-all duration-300 relative">
+                <i class="fa-solid fa-comments text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Chats</span>
+                <span id="global-chat-badge" class="absolute top-0 right-1 px-1.5 h-4 bg-red-500 text-white font-bold text-[9px] rounded-full flex items-center justify-center hidden shadow-lg animate-bounce">0</span>
+            </button>
+            <button onclick="switchTab('members')" id="nav-members" class="nav-btn flex flex-col items-center text-zinc-400 hover:text-cronuxGreen transition-all duration-300">
+                <i class="fa-solid fa-users text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Members</span>
+            </button>
+            <button onclick="switchTab('teams')" id="nav-teams" class="nav-btn flex flex-col items-center text-zinc-400 hover:text-cronuxGreen transition-all duration-300">
+                <i class="fa-solid fa-shield-halved text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Teams</span>
+            </button>
+            <button onclick="switchTab('scrims')" id="nav-scrims" class="nav-btn flex flex-col items-center text-zinc-400 hover:text-cronuxGreen transition-all duration-300">
+                <i class="fa-solid fa-calendar-days text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Scrims</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        const SOLE_ADMIN_EMAIL = "3xc@cronux.admin";
+        const SOLE_ADMIN_PASS = "@Levi1225";
+        const CLAN_MASTER_EMAIL = "kane@cronux.master";
+        const DEFAULT_MEMBER_PASS = "CRONUX-MAIN";
+
+        let pendingUsers = JSON.parse(localStorage.getItem('cronux_pending')) || [
+            { id: 1, name: "Vortex", email: "vortex@cronux.mem", password: "123", role: "Member Applicant" }
+        ];
+        
+        let approvedUsers = JSON.parse(localStorage.getItem('cronux_approved')) || [
+            { id: 100, name: "trix", email: SOLE_ADMIN_EMAIL, password: SOLE_ADMIN_PASS, role: "Administrator", canAccessAnnounce: true, canAccessTeamGC: true },
+            { id: 101, name: "Kane (Clan Master)", email: CLAN_MASTER_EMAIL, password: "123", role: "Clan Master", canAccessAnnounce: true, canAccessTeamGC: true },
+            { id: 102, name: "Yuta", email: "yuta@cronux.mem", password: "123", role: "Verified Member", canAccessAnnounce: true, canAccessTeamGC: false }
+        ];
+
+        let scrimMatches = JSON.parse(localStorage.getItem('cronux_scrims')) || [
+            { id: 1, title: "6:00-8:00 PM • CX Zenith vs Team Nova", status: "LIVE NOW" }
+        ];
+
+        let chatGlobal = JSON.parse(localStorage.getItem('cronux_chat_global')) || [
+            { user_name: "trix", message: "Welcome to Cronux Global Chat!", time: "9:40 AM" }
+        ];
+        let chatAnnounce = JSON.parse(localStorage.getItem('cronux_chat_announce')) || [
+            { user_name: "trix", message: "Official Announcement Notice Board.", time: "9:41 AM" }
+        ];
+        let chatTeam = JSON.parse(localStorage.getItem('cronux_chat_team')) || [
+            { user_name: "trix", message: "CX Official Team Member GC initialized.", time: "9:42 AM" }
+        ];
+
+        let currentUser = JSON.parse(localStorage.getItem('cronux_current_user')) || null;
+        let activeChatRoom = null;
+        let unreadGlobal = 0, unreadAnnounce = 0, unreadTeam = 0;
+        let currentActiveTab = 'dashboard';
+
+        function playCuteNotificationSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime); 
+                oscillator.frequency.setValueAtTime(987.77, audioCtx.currentTime + 0.08);
+
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } catch (e) {}
+        }
+
+        const tabs = {
+            dashboard: `
+                <div class="space-y-5 animate-fadeIn">
+                    <div class="p-5 rounded-2xl liquid-glass-card relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
+                            <img src="logoapp.png.jpg" class="w-40 h-40 object-cover rounded-full">
+                        </div>
+                        <p class="text-xs text-zinc-400">Welcome back,</p>
+                        <h2 class="text-xl font-black text-white mt-0.5" id="user-display-name">${currentUser ? currentUser.name : 'Guest User'}</h2>
+                        <div class="inline-block mt-2 px-3 py-1 bg-cronuxGreen/10 border border-cronuxGreen/30 text-cronuxGreen text-[10px] font-bold rounded-full uppercase tracking-wider backdrop-blur-md" id="user-role-badge">
+                            ${currentUser ? currentUser.role : 'Not Logged In'}
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Auth Card: Vanishes completely when logged in -->
+                    <div id="auth-box" class="p-4 rounded-xl liquid-glass-card border-cronuxGreen/40 ${currentUser ? 'hidden' : ''}">
+                        <div class="flex border-b border-white/10 pb-2 mb-3 text-xs font-bold">
+                            <button onclick="switchAuthMode('signup')" id="tab-signup" class="flex-1 text-cronuxGreen pb-1 border-b-2 border-cronuxGreen">Create Member Account</button>
+                            <button onclick="switchAuthMode('login')" id="tab-login" class="flex-1 text-zinc-400 pb-1">Sign In</button>
+                        </div>
+
+                        <!-- Member Sign Up Form -->
+                        <form id="form-signup" onsubmit="handleSignUp(event)" class="space-y-3">
+                            <input type="text" id="su-name" placeholder="Gamertag / Username" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <input type="email" id="su-email" placeholder="Your Email (@cronux.mem)" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <input type="password" id="su-pass" placeholder="Create Password" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <button type="submit" class="w-full py-2 bg-cronuxGreen text-cronuxDark font-bold text-xs rounded-lg glow-btn">
+                                Register Member Account
+                            </button>
+                        </form>
+
+                        <!-- Login Form -->
+                        <form id="form-login" onsubmit="handleLogin(event)" class="space-y-3 hidden">
+                            <input type="email" id="li-email" placeholder="Email Address (Admin, Master, or Member)" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <input type="password" id="li-pass" placeholder="Password" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <button type="submit" class="w-full py-2 bg-cronuxGreen text-cronuxDark font-bold text-xs rounded-lg glow-btn">
+                                Sign In to Server
+                            </button>
+                            <div class="text-right pt-1">
+                                <button type="button" onclick="openForgotPassword()" class="text-[10px] text-cronuxGreen hover:underline">Forgot Password?</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Clean Organized Info Card when Logged In -->
+                    <div id="logged-in-info" class="p-4 rounded-xl liquid-glass-card border-cronuxGreen/30 space-y-3 ${currentUser ? '' : 'hidden'}">
+                        <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check"></i> Server Connection Active
+                        </h3>
+                        <p class="text-xs text-zinc-300">You are securely signed in. Use the bottom navigation bar to access chats, verified member directory, team rosters, and scrim match schedules.</p>
+                    </div>
+                </div>
+            `,
+            adminDashboard: `
+                <div class="space-y-5 animate-fadeIn">
+                    <div class="p-5 rounded-2xl liquid-glass-card border-cronuxGreen/50 bg-gradient-to-br from-emerald-950/60 to-cronuxCard">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 rounded-full bg-cronuxGreen/20 border border-cronuxGreen flex items-center justify-center text-cronuxGreen text-lg font-bold">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] bg-cronuxGreen/20 text-cronuxGreen px-2 py-0.5 rounded font-bold uppercase">Sole Admin Dashboard</span>
+                                <h2 class="text-lg font-black text-white mt-0.5">${currentUser ? currentUser.name : 'trix'}</h2>
+                                <p class="text-[10px] text-zinc-400">Exclusive Server Control & Management</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-2 text-center">
+                            <div class="p-2 rounded-xl bg-black/40 border border-white/5">
+                                <span class="text-zinc-400 text-[9px] block uppercase">Pending</span>
+                                <span class="font-black text-cronuxGreen text-sm" id="stat-pending">0</span>
+                            </div>
+                            <div class="p-2 rounded-xl bg-black/40 border border-white/5">
+                                <span class="text-zinc-400 text-[9px] block uppercase">Members</span>
+                                <span class="font-black text-white text-sm" id="stat-approved">0</span>
+                            </div>
+                            <div class="p-2 rounded-xl bg-black/40 border border-white/5">
+                                <span class="text-zinc-400 text-[9px] block uppercase">Scrims</span>
+                                <span class="font-black text-cronuxGreen text-sm" id="stat-scrims">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin: Add Member Form -->
+                    <div class="p-4 rounded-xl liquid-glass-card border-cronuxGreen/40 space-y-3">
+                        <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-user-plus"></i> Add New Member Directly
+                        </h3>
+                        <form onsubmit="adminAddMember(event)" class="space-y-2">
+                            <input type="text" id="admin-add-name" placeholder="Member Gamertag" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <input type="email" id="admin-add-email" placeholder="Member Email (@cronux.mem)" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <button type="submit" class="w-full py-1.5 bg-cronuxGreen text-cronuxDark font-bold text-xs rounded-lg glow-btn">Add Member</button>
+                        </form>
+                    </div>
+
+                    <!-- Pending Sign-Ups Section -->
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-user-clock"></i> Pending Account Verifications
+                        </h3>
+                        <div id="admin-pending-list" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Approved Members & Channel Access Section -->
+                    <div class="space-y-2 pt-2">
+                        <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-users-gear"></i> Server Members & GC Access Control
+                        </h3>
+                        <div id="admin-approved-list" class="space-y-2 pb-6"></div>
+                    </div>
+                </div>
+            `,
+            chats: `
+                <div class="space-y-4 animate-fadeIn">
+                    <h3 class="font-bold text-sm text-white mb-3">Messenger Chat Inbox</h3>
+                    <div class="space-y-3">
+                        <!-- Global Live Chat Inbox Item -->
+                        <div onclick="openChatRoom('global')" class="p-3.5 rounded-2xl liquid-glass-card flex items-center justify-between cursor-pointer hover:border-cronuxGreen/60 transition relative">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-full bg-emerald-900/50 border border-cronuxGreen flex items-center font-bold text-cronuxGreen justify-center text-sm"><i class="fa-solid fa-globe"></i></div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">Global Live Chat</h4>
+                                    <p class="text-[10px] text-zinc-400">Open to all verified community members</p>
+                                </div>
+                            </div>
+                            <span id="inbox-badge-global" class="px-2 py-0.5 bg-red-500 text-white font-bold text-[10px] rounded-full hidden animate-bounce">0</span>
+                        </div>
+
+                        <!-- Announcements Inbox Item -->
+                        <div onclick="openChatRoom('announce')" class="p-3.5 rounded-2xl liquid-glass-card flex items-center justify-between cursor-pointer hover:border-cronuxGreen/60 transition relative">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-full bg-cronuxGreen/20 border border-cronuxGreen flex items-center font-bold text-cronuxGreen justify-center text-sm"><i class="fa-solid fa-bullhorn"></i></div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">Official Announcements</h4>
+                                    <p class="text-[10px] text-cronuxGreen">Notice board (Admin approval required)</p>
+                                </div>
+                            </div>
+                            <span id="inbox-badge-announce" class="px-2 py-0.5 bg-cronuxGreen text-cronuxDark font-bold text-[10px] rounded-full hidden">!</span>
+                        </div>
+
+                        <!-- CX Team GC Inbox Item -->
+                        <div onclick="openChatRoom('team')" class="p-3.5 rounded-2xl liquid-glass-card flex items-center justify-between cursor-pointer hover:border-cronuxGreen/60 transition relative">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-full bg-blue-900/40 border border-blue-400 flex items-center font-bold text-blue-400 justify-center text-sm"><i class="fa-solid fa-shield-halved"></i></div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">CX Official Team GC</h4>
+                                    <p class="text-[10px] text-zinc-400">Restricted to admin-approved team members</p>
+                                </div>
+                            </div>
+                            <span id="inbox-badge-team" class="px-2 py-0.5 bg-red-500 text-white font-bold text-[10px] rounded-full hidden animate-bounce">0</span>
+                        </div>
+                    </div>
+                </div>
+            `,
+            chatroom: `
+                <div class="space-y-3 animate-fadeIn flex flex-col h-[530px]">
+                    <div class="flex items-center justify-between px-4 py-2.5 rounded-xl liquid-glass-card border-cronuxGreen/30">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="switchTab('chats')" class="text-zinc-400 hover:text-white mr-1"><i class="fa-solid fa-arrow-left text-sm"></i></button>
+                            <div>
+                                <h4 class="font-bold text-xs text-white" id="chatroom-title">Chat Room</h4>
+                                <p class="text-[10px] text-cronuxGreen flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-cronuxGreen animate-pulse"></span> Online Real-Time
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1 liquid-glass-card rounded-2xl p-3 flex flex-col justify-between overflow-hidden shadow-inner bg-black/20">
+                        <div id="chatroom-messages" class="flex-1 overflow-y-auto space-y-3 pr-2 text-xs"></div>
+                        <div class="mt-3 flex items-center gap-2 pt-2 border-t border-white/10">
+                            <input type="text" id="chatroom-input" placeholder="Type a message..." onkeypress="handleChatRoomKeyPress(event)" class="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <button onclick="sendChatRoomMessage()" class="w-9 h-9 bg-cronuxGreen text-cronuxDark rounded-lg flex items-center justify-center font-bold glow-btn"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `,
+            members: `
+                <div class="space-y-4 animate-fadeIn">
+                    <h3 class="font-bold text-sm text-white mb-2">Verified Server Members</h3>
+                    <div id="dynamic-members-list" class="space-y-2"></div>
+                </div>
+            `,
+            teams: `<div class="p-4 rounded-xl liquid-glass-card"><h3 class="font-black text-white text-base">CX MAIN TEAM</h3><p class="text-xs text-zinc-400 mt-0.5">Captain: Trix | Handler: Zach</p></div>`,
+            scrims: `
+                <div class="space-y-4 animate-fadeIn">
+                    <h3 class="font-bold text-sm text-white mb-2">Active Scrim Matches</h3>
+                    <div id="dynamic-scrims-list" class="space-y-3"></div>
+                </div>
+            `
+        };
+
+        function playCyberAuthAnimation(titleText, subText, callback) {
+            const overlay = document.getElementById('cyber-auth-overlay');
+            const title = document.getElementById('cyber-auth-title');
+            const sub = document.getElementById('cyber-auth-sub');
+            const bar = document.getElementById('cyber-progress-bar');
+
+            title.innerText = titleText;
+            sub.innerText = subText;
+            bar.style.width = '0%';
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                bar.style.width = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        overlay.classList.add('opacity-0');
+                        setTimeout(() => overlay.classList.add('hidden'), 300);
+                        if (callback) callback();
+                    }, 200);
+                }
+            }, 40);
+        }
+
+        function switchTab(tabName) {
+            currentActiveTab = tabName;
+            const contentArea = document.getElementById('main-content');
+
+            if (tabs[tabName]) {
+                if (tabName === 'dashboard' && currentUser && currentUser.role === 'Administrator') {
+                    contentArea.innerHTML = tabs['adminDashboard'];
+                    renderAdminDashboardLists();
+                    updateUIAccess();
+                    return;
+                }
+                contentArea.innerHTML = tabs[tabName];
+                if (tabName === 'dashboard' && currentUser) {
+                    document.getElementById('user-display-name').innerText = currentUser.name;
+                    document.getElementById('user-role-badge').innerText = currentUser.role;
+                }
+                if (tabName === 'adminDashboard') {
+                    renderAdminDashboardLists();
+                }
+                if (tabName === 'members') renderLocalMembers();
+                if (tabName === 'scrims') renderUserScrims();
+                if (tabName === 'chats') updateInboxBadges();
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-cronuxGreen', 'scale-110');
+                btn.classList.add('text-zinc-400');
+            });
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-zinc-400');
+                activeNav.classList.add('text-cronuxGreen', 'scale-110');
+            }
+            contentArea.scrollTop = 0;
+            updateUIAccess();
+        }
+
+        function openChatRoom(roomKey) {
+            if (roomKey === 'team' && currentUser.role !== 'Administrator' && currentUser.role !== 'Clan Master' && !currentUser.canAccessTeamGC) {
+                alert('Access Denied: You are not approved by trix to join the CX Official Team GC.');
+                return;
+            }
+            if (roomKey === 'announce' && currentUser.role !== 'Administrator' && currentUser.role !== 'Clan Master' && !currentUser.canAccessAnnounce) {
+                alert('Access Denied: You are not approved by trix to join Official Announcements.');
+                return;
+            }
+
+            activeChatRoom = roomKey;
+            const contentArea = document.getElementById('main-content');
+            contentArea.innerHTML = tabs['chatroom'];
+
+            if (roomKey === 'global') {
+                document.getElementById('chatroom-title').innerText = "Global Live Chat";
+                document.getElementById('chatroom-subtitle').innerText = "Community Open Channel";
+                unreadGlobal = 0;
+            } else if (roomKey === 'announce') {
+                document.getElementById('chatroom-title').innerText = "Official Announcements";
+                document.getElementById('chatroom-subtitle').innerText = "Notice Board";
+                unreadAnnounce = 0;
+            } else if (roomKey === 'team') {
+                document.getElementById('chatroom-title').innerText = "CX Official Team GC";
+                document.getElementById('chatroom-subtitle').innerText = "Exclusive Team Member Channel";
+                unreadTeam = 0;
+            }
+            updateGlobalNavBadge();
+            renderChatRoomMessages();
+        }
+
+        function handleChatRoomKeyPress(e) { if (e.key === 'Enter') sendChatRoomMessage(); }
+        function sendChatRoomMessage() {
+            if (!currentUser) return;
+            const input = document.getElementById('chatroom-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            // Restrict posting in announcements to Admin and Clan Master only
+            if (activeChatRoom === 'announce' && currentUser.role !== 'Administrator' && currentUser.role !== 'Clan Master') {
+                alert('Only Admin and Clan Master can post announcements.');
+                return;
+            }
+
+            const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const newMsg = { user_name: currentUser.name, message: msg, time: timeNow };
+            if (activeChatRoom === 'global') {
+                chatGlobal.push(newMsg);
+                localStorage.setItem('cronux_chat_global', JSON.stringify(chatGlobal));
+            } else if (activeChatRoom === 'announce') {
+                chatAnnounce.push(newMsg);
+                localStorage.setItem('cronux_chat_announce', JSON.stringify(chatAnnounce));
+            } else if (activeChatRoom === 'team') {
+                chatTeam.push(newMsg);
+                localStorage.setItem('cronux_chat_team', JSON.stringify(chatTeam));
+            }
+            input.value = '';
+            renderChatRoomMessages();
+        }
+
+        function renderChatRoomMessages() {
+            const chatBox = document.getElementById('chatroom-messages');
+            if (!chatBox) return;
+
+            let messages = [];
+            if (activeChatRoom === 'global') messages = chatGlobal;
+            else if (activeChatRoom === 'announce') messages = chatAnnounce;
+            else if (activeChatRoom === 'team') messages = chatTeam;
+
+            chatBox.innerHTML = messages.map(m => {
+                const isMe = currentUser && m.user_name === currentUser.name;
+                if (isMe) {
+                    return `
+                        <div class="flex flex-col items-end space-y-1 animate-fadeIn">
+                            <span class="text-[9px] text-zinc-400 mr-1">You • ${m.time || ''}</span>
+                            <div class="max-w-[75%] px-3.5 py-2 rounded-2xl bg-cronuxGreen text-cronuxDark font-medium text-xs shadow-md rounded-br-sm">
+                                ${m.message}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="flex flex-col items-start space-y-1 animate-fadeIn">
+                            <span class="text-[9px] text-cronuxGreen font-bold ml-1">${m.user_name} • ${m.time || ''}</span>
+                            <div class="max-w-[75%] px-3.5 py-2 rounded-2xl bg-black/60 border border-white/10 text-white text-xs shadow-md rounded-bl-sm">
+                                ${m.message}
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'cronux_chat_global') {
+                chatGlobal = JSON.parse(e.newValue);
+                if (activeChatRoom === 'global') renderChatRoomMessages();
+                else { unreadGlobal++; updateGlobalNavBadge(); playCuteNotificationSound(); }
+            }
+            if (e.key === 'cronux_chat_announce') {
+                chatAnnounce = JSON.parse(e.newValue);
+                if (activeChatRoom === 'announce') renderChatRoomMessages();
+                else { unreadAnnounce++; updateGlobalNavBadge(); playCuteNotificationSound(); }
+            }
+            if (e.key === 'cronux_chat_team') {
+                chatTeam = JSON.parse(e.newValue);
+                if (activeChatRoom === 'team') renderChatRoomMessages();
+                else { unreadTeam++; updateGlobalNavBadge(); playCuteNotificationSound(); }
+            }
+            if (e.key === 'cronux_approved') {
+                approvedUsers = JSON.parse(e.newValue);
+                // Keep current user state updated if admin toggled permissions
+                if (currentUser) {
+                    let updatedMe = approvedUsers.find(u => u.email === currentUser.email);
+                    if (updatedMe) {
+                        currentUser = updatedMe;
+                        localStorage.setItem('cronux_current_user', JSON.stringify(currentUser));
+                    }
+                }
+            }
+        });
+
+        function updateGlobalNavBadge() {
+            const badge = document.getElementById('global-chat-badge');
+            const totalUnread = unreadGlobal + unreadAnnounce + unreadTeam;
+            if (!badge) return;
+            if (totalUnread > 0) {
+                badge.innerText = totalUnread;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function updateInboxBadges() {
+            const bg = document.getElementById('inbox-badge-global');
+            const ba = document.getElementById('inbox-badge-announce');
+            const bt = document.getElementById('inbox-badge-team');
+            if(bg) { bg.innerText = unreadGlobal; unreadGlobal > 0 ? bg.classList.remove('hidden') : bg.classList.add('hidden'); }
+            if(ba) { unreadAnnounce > 0 ? ba.classList.remove('hidden') : ba.classList.add('hidden'); }
+            if(bt) { bt.innerText = unreadTeam; unreadTeam > 0 ? bt.classList.remove('hidden') : bt.classList.add('hidden'); }
+        }
+
+        function switchAuthMode(mode) {
+            if (mode === 'signup') {
+                document.getElementById('form-signup').classList.remove('hidden');
+                document.getElementById('form-login').classList.add('hidden');
+                document.getElementById('tab-signup').className = 'flex-1 text-cronuxGreen pb-1 border-b-2 border-cronuxGreen font-bold';
+                document.getElementById('tab-login').className = 'flex-1 text-zinc-400 pb-1';
+            } else {
+                document.getElementById('form-signup').classList.add('hidden');
+                document.getElementById('form-login').classList.remove('hidden');
+                document.getElementById('tab-login').className = 'flex-1 text-cronuxGreen pb-1 border-b-2 border-cronuxGreen font-bold';
+                document.getElementById('tab-signup').className = 'flex-1 text-zinc-400 pb-1';
+            }
+        }
+
+        function openForgotPassword() {
+            const emailInput = prompt("Enter your registered member email (@cronux.mem):");
+            if (!emailInput) return;
+            const email = emailInput.toLowerCase().trim();
+
+            if (email === SOLE_ADMIN_EMAIL.toLowerCase() || email === CLAN_MASTER_EMAIL.toLowerCase()) {
+                alert("Master or Admin passwords cannot be recovered this way.");
+                return;
+            }
+
+            let member = approvedUsers.find(u => u.email === email);
+            if (!member) {
+                alert("No verified member found with that email address.");
+                return;
+            }
+
+            if (member.password === DEFAULT_MEMBER_PASS) {
+                const newPass = prompt(`Your account is currently set to default (${DEFAULT_MEMBER_PASS}). Enter new custom password:`);
+                if (!newPass || newPass === DEFAULT_MEMBER_PASS) return;
+                member.password = newPass;
+                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                alert("Password updated successfully!");
+            } else {
+                const checkDefault = prompt("Type 'CRONUX-MAIN' if trix set your account to default:");
+                if (checkDefault === DEFAULT_MEMBER_PASS) {
+                    member.password = DEFAULT_MEMBER_PASS;
+                    localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                    const finalPass = prompt("Enter your new custom password:");
+                    if (!finalPass) return;
+                    member.password = finalPass;
+                    localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                    alert("Password successfully reset!");
+                } else {
+                    alert("Incorrect default password phrase.");
+                }
+            }
+        }
+
+        // --- ADMIN TOGGLES FOR ANNOUNCEMENTS & TEAM GC ---
+        function toggleAnnounceAccess(id) {
+            let member = approvedUsers.find(u => u.id === id);
+            if (member) {
+                member.canAccessAnnounce = !member.canAccessAnnounce;
+                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                renderAdminDashboardLists();
+            }
+        }
+
+        function toggleTeamAccess(id) {
+            let member = approvedUsers.find(u => u.id === id);
+            if (member) {
+                member.canAccessTeamGC = !member.canAccessTeamGC;
+                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                renderAdminDashboardLists();
+            }
+        }
+
+        function makePasswordDefault(id) {
+            let member = approvedUsers.find(u => u.id === id);
+            if (member) {
+                member.password = DEFAULT_MEMBER_PASS;
+                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                renderAdminDashboardLists();
+                alert(`Password for ${member.name} reset to default.`);
+            }
+        }
+
+        function handleSignUp(e) {
+            e.preventDefault();
+            const name = document.getElementById('su-name').value;
+            const email = document.getElementById('su-email').value.toLowerCase();
+            const pass = document.getElementById('su-pass').value;
+
+            if (email.endsWith('@cronux.admin') || email.endsWith('@cronux.master')) {
+                alert('Access Denied: Protected role domain.');
+                return;
+            }
+
+            if (email.endsWith('@cronux.mem')) {
+                pendingUsers.push({ id: Date.now(), name, email, password: pass, role: 'Member Applicant', canAccessAnnounce: false, canAccessTeamGC: false });
+                localStorage.setItem('cronux_pending', JSON.stringify(pendingUsers));
+                alert('Account registered! Status: PENDING verification by trix.');
+                document.getElementById('su-name').value = '';
+                document.getElementById('su-email').value = '';
+                document.getElementById('su-pass').value = '';
+            } else {
+                alert('Invalid domain! Use @cronux.mem');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('li-email').value.toLowerCase();
+            const pass = document.getElementById('li-pass').value;
+
+            if (email === SOLE_ADMIN_EMAIL.toLowerCase() && pass === SOLE_ADMIN_PASS) {
+                playCyberAuthAnimation("ESTABLISHING ADMIN LINK...", "VERIFYING SOLE OWNER PROTOCOL", () => {
+                    currentUser = { id: 100, name: "trix", email: SOLE_ADMIN_EMAIL, role: "Administrator", canAccessAnnounce: true, canAccessTeamGC: true };
+                    localStorage.setItem('cronux_current_user', JSON.stringify(currentUser));
+                    switchTab('adminDashboard');
+                });
+                return;
+            }
+
+            if (email === CLAN_MASTER_EMAIL.toLowerCase() && pass === "123") {
+                playCyberAuthAnimation("SYNCING CLAN MASTER NODE...", "AUTHENTICATING KANE", () => {
+                    currentUser = { id: 101, name: "Kane (Clan Master)", email: CLAN_MASTER_EMAIL, role: "Clan Master", canAccessAnnounce: true, canAccessTeamGC: true };
+                    localStorage.setItem('cronux_current_user', JSON.stringify(currentUser));
+                    switchTab('dashboard');
+                });
+                return;
+            }
+
+            let foundUser = approvedUsers.find(u => u.email === email && u.password === pass);
+            if (foundUser) {
+                playCyberAuthAnimation("DECRYPTING MEMBER ACCESS...", "CONNECTING TO CRONUX GRID", () => {
+                    currentUser = foundUser;
+                    localStorage.setItem('cronux_current_user', JSON.stringify(currentUser));
+                    switchTab('dashboard');
+                });
+                return;
+            }
+
+            let pendingUser = pendingUsers.find(u => u.email === email && u.password === pass);
+            if (pendingUser) {
+                alert('Your account is still PENDING review.');
+                return;
+            }
+
+            alert('Invalid email or password.');
+        }
+
+        function triggerCyberLogout() {
+            playCyberAuthAnimation("DISCONNECTING NEURAL LINK...", "PURGING SESSION CACHE", () => {
+                currentUser = null;
+                localStorage.removeItem('cronux_current_user');
+                switchTab('dashboard');
+            });
+        }
+
+        function logoutUser() {
+            triggerCyberLogout();
+        }
+
+        function renderLocalMembers() {
+            const list = document.getElementById('dynamic-members-list');
+            if (!list) return;
+            list.innerHTML = approvedUsers.map(u => `
+                <div class="flex items-center justify-between p-3 rounded-xl liquid-glass-card">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-900/50 border border-cronuxGreen flex items-center font-bold text-cronuxGreen justify-center">${u.name.charAt(0)}</div>
+                        <div><h4 class="font-bold text-sm text-white">${u.name}</h4><p class="text-[10px] text-zinc-400">${u.email} (${u.role})</p></div>
+                    </div>
+                    <span class="px-2 py-1 bg-cronuxGreen/10 text-cronuxGreen text-[10px] font-bold rounded border border-cronuxGreen/20">Active</span>
+                </div>
+            `).join('');
+        }
+
+        function renderUserScrims() {
+            const list = document.getElementById('dynamic-scrims-list');
+            if (!list) return;
+            list.innerHTML = scrimMatches.map(s => `
+                <div class="p-4 rounded-xl liquid-glass-card space-y-2">
+                    <span class="text-xs ${s.status === 'DONE' ? 'text-zinc-500' : 'text-cronuxGreen font-bold'}">${s.status}</span>
+                    <h4 class="font-bold text-sm text-white">${s.title}</h4>
+                    ${s.status !== 'DONE' ? `<button onclick="alert('Checked in successfully!')" class="w-full py-2 bg-cronuxGreen text-cronuxDark font-bold text-xs rounded-lg glow-btn">Check In</button>` : `<p class="text-[10px] text-zinc-500 italic">This match has concluded.</p>`}
+                </div>
+            `).join('');
+        }
+
+        function renderAdminDashboardLists() {
+            document.getElementById('stat-pending').innerText = pendingUsers.length;
+            document.getElementById('stat-approved').innerText = approvedUsers.length;
+            document.getElementById('stat-scrims').innerText = scrimMatches.length;
+
+            document.getElementById('admin-pending-list').innerHTML = pendingUsers.length ? pendingUsers.map(u => `
+                <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
+                    <div><h5 class="font-bold text-white">${u.name}</h5><p class="text-[10px] text-zinc-400">${u.email}</p></div>
+                    <div class="flex space-x-2">
+                        <button onclick="acceptUser(${u.id})" class="px-2.5 py-1 bg-cronuxGreen text-cronuxDark font-bold rounded">Accept</button>
+                        <button onclick="deleteUser(${u.id})" class="px-2.5 py-1 bg-red-500/20 text-red-400 rounded">Delete</button>
+                    </div>
+                </div>
+            `).join('') : `<p class="text-xs text-zinc-500 italic p-2">No pending applications.</p>`;
+
+            // Admin approval controls for Announce & Team GC access
+            document.getElementById('admin-approved-list').innerHTML = approvedUsers.map(u => `
+                <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
+                    <div><h5 class="font-bold text-white">${u.name}</h5><p class="text-[10px] text-zinc-400">${u.email} (${u.role})</p></div>
+                    <div class="flex space-x-1 items-center">
+                        ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleAnnounceAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessAnnounce ? 'bg-emerald-500/30 text-emerald-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]" title="Toggle Announcements Access">Announce</button>` : ''}
+                        ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleTeamAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessTeamGC ? 'bg-blue-500/30 text-blue-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]" title="Toggle Team GC Access">Team</button>` : ''}
+                        ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="makePasswordDefault(${u.id})" class="px-1.5 py-1 bg-amber-500/20 text-amber-300 font-semibold rounded text-[10px]">Default</button>` : ''}
+                        ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="revokeUser(${u.id})" class="px-1.5 py-1 bg-red-500/20 text-red-400 rounded text-[10px]">Remove</button>` : '<span class="text-[10px] text-cronuxGreen font-bold">Owner</span>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function adminAddMember(e) {
+            e.preventDefault();
+            const name = document.getElementById('admin-add-name').value;
+            const email = document.getElementById('admin-add-email').value.toLowerCase();
+            if(!email.endsWith('@cronux.mem')) {
+                alert('Member email must end with @cronux.mem');
+                return;
+            }
+            approvedUsers.push({ id: Date.now(), name, email, password: DEFAULT_MEMBER_PASS, role: 'Verified Member', canAccessAnnounce: true, canAccessTeamGC: false });
+            localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+            document.getElementById('admin-add-name').value = '';
+            document.getElementById('admin-add-email').value = '';
+            renderAdminDashboardLists();
+            alert('Member added successfully with default Global & Announcement access!');
+        }
+
+        function acceptUser(id) {
+            const idx = pendingUsers.findIndex(u => u.id === id);
+            if (idx !== -1) {
+                const user = pendingUsers.splice(idx, 1)[0];
+                approvedUsers.push({ id: user.id, name: user.name, email: user.email, password: user.password, role: 'Verified Member', canAccessAnnounce: true, canAccessTeamGC: false });
+                localStorage.setItem('cronux_pending', JSON.stringify(pendingUsers));
+                localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+                renderAdminDashboardLists();
+            }
+        }
+
+        function deleteUser(id) {
+            pendingUsers = pendingUsers.filter(u => u.id !== id);
+            localStorage.setItem('cronux_pending', JSON.stringify(pendingUsers));
+            renderAdminDashboardLists();
+        }
+
+        function revokeUser(id) {
+            approvedUsers = approvedUsers.filter(u => u.id !== id);
+            localStorage.setItem('cronux_approved', JSON.stringify(approvedUsers));
+            renderAdminDashboardLists();
+        }
+
+        function updateUIAccess() {
+            const nav = document.getElementById('bottom-nav');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            if (currentUser) {
+                nav.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+            } else {
+                nav.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (currentUser && currentUser.role === 'Administrator') {
+                switchTab('adminDashboard');
+            } else {
+                switchTab('dashboard');
+            }
+            updateUIAccess();
+
+            let progress = 0;
+            const loadInterval = setInterval(() => {
+                progress += 2;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(loadInterval);
+                    document.getElementById('splash-screen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('splash-screen').style.display = 'none';
+                        document.getElementById('app-container').classList.remove('opacity-0', 'pointer-events-none');
+                    }, 600);
+                }
+                document.getElementById('progress-bar').style.width = `${progress}%`;
+                document.getElementById('loading-percent').innerText = `${progress}%`;
+            }, 25);
+        });
+    </script>
+</body>
+</html>
