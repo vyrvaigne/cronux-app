@@ -2,27 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CRONUX - Official Clan X Community App</title>
-    <!-- PWA / Native App Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#030504">
-    <link rel="apple-touch-icon" href="logoapp.png.jpg">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRONUX - Esports & Gaming Community</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Client SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        cronuxGreen: '#00FF88',
-                        cronuxDark: '#070B09',
-                        cronuxCard: 'rgba(18, 30, 22, 0.65)',
-                        cronuxBorder: 'rgba(0, 255, 136, 0.15)'
+                        cronuxGreen: '#00ff66',
+                        cronuxDark: '#0a0f0d',
+                        cronuxCard: '#121a16'
                     }
                 }
             }
@@ -30,107 +21,87 @@
     </script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom Stylesheet -->
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="text-white font-sans antialiased flex justify-center items-center min-h-screen selection:bg-cronuxGreen selection:text-cronuxDark">
+<body class="bg-cronuxDark text-white font-sans antialiased min-h-screen flex flex-col items-center justify-center overflow-x-hidden">
 
-    <!-- Cyber Game Authentication Overlay Animation Screen -->
-    <div id="cyber-auth-overlay" class="absolute inset-0 w-full max-w-md mx-auto h-[844px] bg-[#030504]/95 backdrop-blur-3xl z-50 flex flex-col justify-center items-center p-8 border-4 border-cronuxBorder rounded-[40px] hidden opacity-0 transition-all duration-300">
-        <div class="relative p-4 rounded-full liquid-glass-panel mb-6 animate-cyber-glitch">
-            <div class="absolute inset-0 bg-cronuxGreen/40 rounded-full blur-xl animate-ping"></div>
-            <img src="logoapp.png.jpg" alt="CRONUX Logo" class="w-24 h-24 object-cover rounded-full border-2 border-cronuxGreen relative z-10">
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 z-50 bg-cronuxDark flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="relative w-24 h-24 mb-6">
+            <div class="absolute inset-0 rounded-full border-2 border-cronuxGreen/20 animate-ping"></div>
+            <div class="absolute inset-0 rounded-full border-2 border-cronuxGreen border-t-transparent animate-spin"></div>
+            <img src="logoapp.png.jpg" alt="CRONUX Logo" class="w-full h-full object-cover rounded-full p-1">
         </div>
-        <div class="text-center space-y-2 w-full max-w-xs">
-            <h2 id="cyber-auth-title" class="text-lg font-black tracking-widest text-cronuxGreen font-mono uppercase">ACCESSING NEURAL LINK...</h2>
-            <p id="cyber-auth-sub" class="text-[10px] text-zinc-400 font-mono tracking-wider">BYPASSING FIREWALL SECURITIES</p>
-            <div class="w-full h-1.5 bg-black/60 rounded-full overflow-hidden p-0.5 border border-cronuxGreen/40 mt-4">
-                <div id="cyber-progress-bar" class="h-full bg-cronuxGreen rounded-full w-0 transition-all duration-100 shadow-[0_0_15px_#00FF88]"></div>
+        <h1 class="text-2xl font-black tracking-widest text-cronuxGreen uppercase">CRONUX</h1>
+        <p class="text-xs text-zinc-400 italic mt-1">"Cronux doesn't follow, Cronux leads."</p>
+        <div class="w-48 h-1 bg-white/10 rounded-full mt-8 overflow-hidden">
+            <div class="h-full bg-cronuxGreen animate-pulse w-3/4"></div>
+        </div>
+        <span class="text-[10px] text-zinc-500 mt-2 font-mono uppercase tracking-wider">Initializing Systems...</span>
+    </div>
+
+    <!-- Cyber Auth Animation Overlay -->
+    <div id="cyber-auth-overlay" class="fixed inset-0 z-40 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="p-6 rounded-2xl liquid-glass-card max-w-xs w-full text-center space-y-4 border border-cronuxGreen/40">
+            <div class="w-12 h-12 mx-auto rounded-full bg-cronuxGreen/20 border border-cronuxGreen flex items-center justify-center text-cronuxGreen text-lg animate-spin">
+                <i class="fa-solid fa-microchip"></i>
+            </div>
+            <div>
+                <h3 id="cyber-auth-title" class="text-sm font-black text-white uppercase tracking-wider">ESTABLISHING LINK...</h3>
+                <p id="cyber-auth-sub" class="text-[10px] text-zinc-400 mt-1">Please wait while we sync nodes</p>
+            </div>
+            <div class="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/10">
+                <div id="cyber-progress-bar" class="h-full bg-cronuxGreen w-0 transition-all duration-300"></div>
             </div>
         </div>
     </div>
 
-    <!-- Game Splash Loading Screen -->
-    <div id="splash-screen" class="absolute inset-0 w-full max-w-md mx-auto h-[844px] bg-[#070B09]/95 backdrop-blur-2xl z-50 flex flex-col justify-between items-center py-16 px-6 border-4 border-cronuxBorder rounded-[40px] transition-all duration-700 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-        <div class="text-center pt-8">
-            <span class="text-[10px] uppercase font-bold tracking-[0.3em] text-zinc-400">Clan X Community</span>
-            <h2 class="text-xs text-cronuxGreen tracking-widest mt-1 font-mono">OFFICIAL APP v1.0</h2>
-        </div>
-
-        <div class="flex flex-col items-center space-y-6">
-            <div class="relative p-3 rounded-full liquid-glass-panel">
-                <div class="absolute inset-0 bg-cronuxGreen/20 rounded-full blur-2xl animate-pulse"></div>
-                <img src="logoapp.png.jpg" alt="CRONUX Logo" class="w-32 h-32 object-cover rounded-full border border-white/20 relative z-10 animate-liquid-logo shadow-[inset_0_2px_6px_rgba(255,255,255,0.4)]">
+    <!-- App Container -->
+    <div id="app-container" class="w-full max-w-md min-h-screen flex flex-col justify-between p-4 opacity-0 pointer-events-none transition-opacity duration-500 pb-20">
+        <!-- Header -->
+        <header class="flex items-center justify-between py-3 border-b border-white/10 mb-4">
+            <div class="flex items-center space-x-2.5">
+                <img src="logoapp.png.jpg" class="w-8 h-8 rounded-full object-cover border border-cronuxGreen/50">
+                <span class="font-black tracking-wider text-sm text-white">CRONUX</span>
             </div>
-            <div class="text-center space-y-1">
-                <h1 class="text-2xl font-black tracking-wider bg-gradient-to-r from-white via-cronuxGreen to-white bg-clip-text text-transparent">CRONUX</h1>
-                <p class="text-xs text-zinc-300 italic">"Cronux doesn't follow, Cronux leads."</p>
-            </div>
-        </div>
-
-        <div class="w-full max-w-xs space-y-2 pb-6">
-            <div class="flex justify-between text-[11px] text-zinc-400 font-mono">
-                <span id="loading-status">INITIALIZING SYSTEMS...</span>
-                <span id="loading-percent">0%</span>
-            </div>
-            <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/10 shadow-inner">
-                <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-400 to-cronuxGreen rounded-full w-0 transition-all duration-75 shadow-[0_0_12px_#00FF88]"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mobile Device Frame Container -->
-    <div id="app-container" class="w-full max-w-md h-[844px] bg-cronuxDark border-4 border-cronuxBorder rounded-[40px] shadow-2xl flex flex-col relative overflow-hidden opacity-0 transition-all duration-700 pointer-events-none">
-
-        <!-- App Header -->
-        <header class="flex justify-between items-center px-5 py-3.5 border-b border-white/10 liquid-glass-header z-20">
-            <div class="flex items-center space-x-3">
-                <img src="logoapp.png.jpg" alt="CRONUX Logo" class="w-10 h-10 object-cover rounded-full border border-white/20 shadow-[0_0_10px_rgba(0,255,136,0.5)]">
-                <div>
-                    <h1 class="font-black tracking-wider text-lg bg-gradient-to-r from-white to-cronuxGreen bg-clip-text text-transparent">CRONUX</h1>
-                    <p class="text-[10px] text-zinc-400 uppercase tracking-widest font-mono">Clan X Community</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button id="logout-btn" onclick="triggerCyberLogout()" class="p-2 rounded-full text-red-400 hover:text-red-300 transition text-xs hidden" title="Log Out">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
-            </div>
+            <button id="logout-btn" onclick="triggerCyberLogout()" class="hidden px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/20 transition">
+                <i class="fa-solid fa-power-off mr-1"></i> Logout
+            </button>
         </header>
 
-        <!-- Main Scrollable Content Area -->
-        <main id="main-content" class="flex-1 overflow-y-auto pb-28 p-5 space-y-6 scroll-smooth">
-            <!-- Dynamically Loaded Tabs Go Here -->
-        </main>
+        <!-- Main Dynamic Content Area -->
+        <main id="main-content" class="flex-1 overflow-y-auto"></main>
 
         <!-- Bottom Navigation Bar -->
-        <nav id="bottom-nav" class="absolute bottom-0 left-0 right-0 h-20 liquid-glass-nav border-t border-white/10 backdrop-blur-2xl flex justify-around items-center px-2 z-30 hidden">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center text-cronuxGreen transition-all duration-300">
-                <i class="fa-solid fa-house text-lg"></i>
-                <span class="text-[10px] mt-1 font-medium">Home</span>
+        <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-cronuxCard/90 backdrop-blur-lg border-t border-white/10 px-6 py-3 flex justify-between items-center z-30 hidden">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center text-cronuxGreen transition scale-110">
+                <i class="fa-solid fa-house text-sm"></i>
+                <span class="text-[9px] mt-1 font-bold">Home</span>
             </button>
-            <button onclick="switchTab('chats')" id="nav-chats" class="nav-btn flex flex-col items-center text-zinc-400 hover:text-cronuxGreen transition-all duration-300 relative">
-                <i class="fa-solid fa-comments text-lg"></i>
-                <span class="text-[10px] mt-1 font-medium">Chats</span>
-                <span id="global-chat-badge" class="absolute top-0 right-1 px-1.5 h-4 bg-red-500 text-white font-bold text-[9px] rounded-full flex items-center justify-center hidden shadow-lg animate-bounce">0</span>
+            <button onclick="switchTab('chats')" id="nav-chats" class="nav-btn flex flex-col items-center text-zinc-400 transition relative">
+                <i class="fa-solid fa-comments text-sm"></i>
+                <span class="text-[9px] mt-1 font-bold">Chats</span>
+                <span id="global-chat-badge" class="absolute -top-1 -right-1 px-1.5 py-0.2 bg-red-500 text-white font-bold text-[8px] rounded-full hidden">0</span>
             </button>
-            <button onclick="switchTab('members')" id="nav-members" class="nav-btn flex flex-col items-center text-zinc-400 hover:text-cronuxGreen transition-all duration-300">
-                <i class="fa-solid fa-users text-lg"></i>
-                <span class="text-[10px] mt-1 font-medium">Members</span>
+            <button onclick="switchTab('members')" id="nav-members" class="nav-btn flex flex-col items-center text-zinc-400 transition">
+                <i class="fa-solid fa-users text-sm"></i>
+                <span class="text-[9px] mt-1 font-bold">Members</span>
             </button>
-            <button onclick="switchTab('teams')" id="nav-teams" class="nav-btn flex flex-col items-center text-zinc-400 hover:text-cronuxGreen transition-all duration-300">
-                <i class="fa-solid fa-shield-halved text-lg"></i>
-                <span class="text-[10px] mt-1 font-medium">Teams</span>
+            <button onclick="switchTab('teams')" id="nav-teams" class="nav-btn flex flex-col items-center text-zinc-400 transition">
+                <i class="fa-solid fa-shield-halved text-sm"></i>
+                <span class="text-[9px] mt-1 font-bold">Teams</span>
             </button>
-            <button onclick="switchTab('scrims')" id="nav-scrims" class="nav-btn flex flex-col items-center text-zinc-400 hover:text-cronuxGreen transition-all duration-300">
-                <i class="fa-solid fa-calendar-days text-lg"></i>
-                <span class="text-[10px] mt-1 font-medium">Scrims</span>
+            <button onclick="switchTab('scrims')" id="nav-scrims" class="nav-btn flex flex-col items-center text-zinc-400 transition">
+                <i class="fa-solid fa-calendar-days text-sm"></i>
+                <span class="text-[9px] mt-1 font-bold">Scrims</span>
             </button>
         </nav>
-
     </div>
 
-    <!-- External JavaScript Script -->
+    <!-- Application JavaScript Script Link -->
     <script src="script.js"></script>
 </body>
 </html>
