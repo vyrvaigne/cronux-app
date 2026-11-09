@@ -382,7 +382,7 @@
                     <!-- Pending Sign-Ups Section -->
                     <div class="space-y-2">
                         <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-user-clock"></i> Pending Account Verifications
+                            <i class="fa-solid fa-user-clock"></i> Pending Account Verifications (Auto-Sync)
                         </h3>
                         <div id="admin-pending-list" class="space-y-2"></div>
                     </div>
@@ -589,7 +589,7 @@
                 localStorage.setItem('cronux_chat_global', JSON.stringify(chatGlobal));
             } else if (activeChatRoom === 'announce') {
                 chatAnnounce.push(newMsg);
-                localStorage.setItem('cronux_chat_announce', JSON.stringify(chatAnnounce));
+                localStorage.setItem('cronux_announcements', JSON.stringify(chatAnnounce));
             } else if (activeChatRoom === 'team') {
                 chatTeam.push(newMsg);
                 localStorage.setItem('cronux_chat_team', JSON.stringify(chatTeam));
@@ -632,13 +632,14 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        // --- REAL-TIME SYNC ACROSS TABS & SESSIONS ---
         window.addEventListener('storage', (e) => {
             if (e.key === 'cronux_chat_global') {
                 chatGlobal = JSON.parse(e.newValue);
                 if (activeChatRoom === 'global') renderChatRoomMessages();
                 else { unreadGlobal++; updateGlobalNavBadge(); playCuteNotificationSound(); }
             }
-            if (e.key === 'cronux_chat_announce') {
+            if (e.key === 'cronux_announcements') {
                 chatAnnounce = JSON.parse(e.newValue);
                 if (activeChatRoom === 'announce') renderChatRoomMessages();
                 else { unreadAnnounce++; updateGlobalNavBadge(); playCuteNotificationSound(); }
@@ -648,6 +649,12 @@
                 if (activeChatRoom === 'team') renderChatRoomMessages();
                 else { unreadTeam++; updateGlobalNavBadge(); playCuteNotificationSound(); }
             }
+            if (e.key === 'cronux_pending') {
+                pendingUsers = JSON.parse(e.newValue);
+                if (currentActiveTab === 'adminDashboard' || (currentUser && currentUser.role === 'Administrator')) {
+                    renderAdminDashboardLists();
+                }
+            }
             if (e.key === 'cronux_scrims') {
                 scrimMatches = JSON.parse(e.newValue);
                 if (currentActiveTab === 'scrims') renderUserScrims();
@@ -655,6 +662,7 @@
             }
             if (e.key === 'cronux_approved') {
                 approvedUsers = JSON.parse(e.newValue);
+                if (currentActiveTab === 'adminDashboard') renderAdminDashboardLists();
                 if (currentUser) {
                     let updatedMe = approvedUsers.find(u => u.email === currentUser.email);
                     if (updatedMe) {
@@ -766,7 +774,6 @@
             }
         }
 
-        // --- ADMIN SCRIM MANAGEMENT FUNCTIONS ---
         function adminAddScrim(e) {
             e.preventDefault();
             const title = document.getElementById('admin-scrim-title').value;
@@ -807,9 +814,17 @@
             }
 
             if (email.endsWith('@cronux.mem')) {
+                // Check if already pending or approved
+                let exists = approvedUsers.some(u => u.email === email) || pendingUsers.some(u => u.email === email);
+                if (exists) {
+                    alert('An account with this email already exists or is pending review.');
+                    return;
+                }
+
                 pendingUsers.push({ id: Date.now(), name, email, password: pass, role: 'Member Applicant', canAccessAnnounce: false, canAccessTeamGC: false });
                 localStorage.setItem('cronux_pending', JSON.stringify(pendingUsers));
-                alert('Account registered! Status: PENDING verification by trix.');
+                
+                alert('Account registered successfully! It has been automatically sent to trix for review.');
                 document.getElementById('su-name').value = '';
                 document.getElementById('su-email').value = '';
                 document.getElementById('su-pass').value = '';
@@ -853,7 +868,7 @@
 
             let pendingUser = pendingUsers.find(u => u.email === email && u.password === pass);
             if (pendingUser) {
-                alert('Your account is still PENDING review.');
+                alert('Your account is registered and currently PENDING verification by trix.');
                 return;
             }
 
@@ -903,7 +918,6 @@
             document.getElementById('stat-approved').innerText = approvedUsers.length;
             document.getElementById('stat-scrims').innerText = scrimMatches.length;
 
-            // Render Scrim Management List for Admin
             const adminScrimsList = document.getElementById('admin-scrims-list');
             if (adminScrimsList) {
                 adminScrimsList.innerHTML = scrimMatches.map(s => `
@@ -925,7 +939,7 @@
                     <div><h5 class="font-bold text-white">${u.name}</h5><p class="text-[10px] text-zinc-400">${u.email}</p></div>
                     <div class="flex space-x-2">
                         <button onclick="acceptUser(${u.id})" class="px-2.5 py-1 bg-cronuxGreen text-cronuxDark font-bold rounded">Accept</button>
-                        <button onclick="deleteUser(${u.id})" class="px-2.5 py-1 bg-red-500/20 text-red-400 rounded">Delete</button>
+                        <button onclick="deleteUser(${u.id})" class="px-2.5 py-1 bg-red-500/20 text-red-400 rounded">Revoke</button>
                     </div>
                 </div>
             `).join('') : `<p class="text-xs text-zinc-500 italic p-2">No pending applications.</p>`;
