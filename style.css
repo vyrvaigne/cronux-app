@@ -1,35 +1,20 @@
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-    width: 4px;
-}
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-::-webkit-scrollbar-thumb {
-    background: rgba(0, 255, 136, 0.2);
-    border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 255, 136, 0.5);
-}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0, 255, 136, 0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 136, 0.5); }
 
 body {
     background-color: #030504;
     background-image: radial-gradient(circle at 50% 20%, #0d2317 0%, #030504 70%);
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* iOS Liquid Glass Effect */
 .liquid-glass-card {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(18, 30, 22, 0.6) 100%);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.liquid-glass-card:hover {
-    border-color: rgba(0, 255, 136, 0.3);
-    box-shadow: 0 8px 32px 0 rgba(0, 255, 136, 0.1), inset 0 1px 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .liquid-glass-panel {
@@ -41,28 +26,15 @@ body {
 }
 
 .liquid-glass-header {
-    background: rgba(7, 11, 9, 0.75);
+    background: rgba(7, 11, 9, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
 }
 
 .liquid-glass-nav {
-    background: rgba(10, 16, 12, 0.8);
+    background: rgba(10, 16, 12, 0.9);
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
-}
-
-.liquid-glass-btn {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.liquid-glass-btn:hover {
-    background: rgba(0, 255, 136, 0.15);
-    border-color: rgba(0, 255, 136, 0.4);
-    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
 }
 
 .glow-btn {
@@ -76,10 +48,31 @@ body {
     transform: translateY(-1px);
 }
 
-/* Smooth Tab Fade Transition */
+@keyframes liquidPulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3)) brightness(1); }
+    50% { transform: scale(1.06); filter: drop-shadow(0 0 40px rgba(0, 255, 136, 0.7)) brightness(1.2); }
+}
+
+@keyframes cyberGlitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-3px, 3px); filter: hue-rotate(90deg); }
+    40% { transform: translate(-3px, -3px); filter: contrast(200%); }
+    60% { transform: translate(3px, 3px); filter: hue-rotate(-90deg); }
+    80% { transform: translate(3px, -3px); }
+    100% { transform: translate(0); }
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-liquid-logo {
+    animation: liquidPulse 2.5s infinite ease-in-out;
+}
+
+.animate-cyber-glitch {
+    animation: cyberGlitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 .animate-fadeIn {
