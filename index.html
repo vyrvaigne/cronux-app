@@ -209,8 +209,8 @@
     <!-- Application Script Logic & Supabase Integration -->
     <script>
         // --- SUPABASE CLOUD INITIALIZATION ---
-        const SUPABASE_URL = 'https://oxpbigvxfmwexotsmtvo.supabase.co';[cite: 4, 10]
-        const SUPABASE_KEY = 'sb_publishable_hJMK6Xqi6KFt_loXU9TF6g_Ykyl0...';[cite: 5, 10]
+        const SUPABASE_URL = 'https://oxpbigvxfmwexotsmtvo.supabase.co';[cite: 4]
+        const SUPABASE_KEY = 'sb_publishable_hJMK6XqI6KFt_loXU9TF6g_Ykyl0yZZ';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const SOLE_ADMIN_EMAIL = "3xc@cronux.admin";
@@ -234,7 +234,7 @@
         let unreadGlobal = 0, unreadAnnounce = 0, unreadTeam = 0;
         let currentActiveTab = 'dashboard';
 
-        // --- FETCH CLOUD DATA FROM SUPABASE ---
+        // --- FETCH CLOUD DATA FROM SUPABASE (Non-blocking) ---
         async function fetchCloudData() {
             try {
                 const { data: pData } = await supabase.from('pending_users').select('*');
@@ -242,7 +242,6 @@
 
                 const { data: aData } = await supabase.from('approved_users').select('*');
                 if (aData && aData.length > 0) {
-                    // Ensure Sole Admin is always present
                     approvedUsers = [
                         { id: 100, name: "trix", email: SOLE_ADMIN_EMAIL, password: SOLE_ADMIN_PASS, role: "Administrator", canAccessAnnounce: true, canAccessTeamGC: true },
                         { id: 101, name: "Kane (Clan Master)", email: CLAN_MASTER_EMAIL, password: "123", role: "Clan Master", canAccessAnnounce: true, canAccessTeamGC: true },
@@ -256,7 +255,7 @@
                 const { data: tData } = await supabase.from('clan_teams').select('*');
                 if (tData) clanTeams = tData;
             } catch (err) {
-                console.error("Supabase fetch error:", err);
+                console.warn("Supabase fetch notice:", err);
             }
         }
 
@@ -842,7 +841,6 @@
                 return;
             }
 
-            // Insert into Supabase pending_users table
             const { error } = await supabase.from('pending_users').insert([{ name, email, password: pass, role: 'Member Applicant' }]);
             
             if (error) {
@@ -1075,8 +1073,10 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            await fetchCloudData();
+        window.addEventListener('DOMContentLoaded', () => {
+            // Non-blocking cloud fetch
+            fetchCloudData();
+
             if (currentUser && currentUser.role === 'Administrator') {
                 switchTab('adminDashboard');
             } else {
@@ -1086,7 +1086,7 @@
 
             let progress = 0;
             const loadInterval = setInterval(() => {
-                progress += 2;
+                progress += 5;
                 if (progress >= 100) {
                     progress = 100;
                     clearInterval(loadInterval);
