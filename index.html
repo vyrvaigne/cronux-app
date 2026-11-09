@@ -156,7 +156,7 @@
     <!-- Mobile Device Frame Container -->
     <div id="app-container" class="w-full max-w-md h-[844px] bg-cronuxDark border-4 border-cronuxBorder rounded-[40px] shadow-2xl flex flex-col relative overflow-hidden opacity-0 transition-all duration-700 pointer-events-none">
 
-        <!-- App Header (Status Bar Removed) -->
+        <!-- App Header -->
         <header class="flex justify-between items-center px-5 py-3.5 border-b border-white/10 liquid-glass-header z-20">
             <div class="flex items-center space-x-3">
                 <img src="logoapp.png.jpg" alt="CRONUX Logo" class="w-10 h-10 object-cover rounded-full border border-white/20 shadow-[0_0_10px_rgba(0,255,136,0.5)]">
@@ -315,7 +315,7 @@
                 </div>
             `,
             adminDashboard: `
-                <div class="space-y-5 animate-fadeIn">
+                <div class="space-y-5 animate-fadeIn pb-6">
                     <div class="p-5 rounded-2xl liquid-glass-card border-cronuxGreen/50 bg-gradient-to-br from-emerald-950/60 to-cronuxCard">
                         <div class="flex items-center space-x-3">
                             <div class="w-12 h-12 rounded-full bg-cronuxGreen/20 border border-cronuxGreen flex items-center justify-center text-cronuxGreen text-lg font-bold">
@@ -341,6 +341,30 @@
                                 <span class="font-black text-cronuxGreen text-sm" id="stat-scrims">0</span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Admin: Add Scrim Schedule Form -->
+                    <div class="p-4 rounded-xl liquid-glass-card border-cronuxGreen/40 space-y-3">
+                        <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-calendar-plus"></i> Post New Scrim Match
+                        </h3>
+                        <form onsubmit="adminAddScrim(event)" class="space-y-2">
+                            <input type="text" id="admin-scrim-title" placeholder="e.g. 7:00-9:00 PM • CX vs Team Alpha" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <select id="admin-scrim-status" class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cronuxGreen">
+                                <option value="PENDING">PENDING</option>
+                                <option value="LIVE NOW">LIVE NOW</option>
+                                <option value="DONE">DONE</option>
+                            </select>
+                            <button type="submit" class="w-full py-1.5 bg-cronuxGreen text-cronuxDark font-bold text-xs rounded-lg glow-btn">Publish Scrim Schedule</button>
+                        </form>
+                    </div>
+
+                    <!-- Admin: Manage Scrims Status -->
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-calendar-days"></i> Manage Scrim Status
+                        </h3>
+                        <div id="admin-scrims-list" class="space-y-2"></div>
                     </div>
 
                     <!-- Admin: Add Member Form -->
@@ -565,7 +589,7 @@
                 localStorage.setItem('cronux_chat_global', JSON.stringify(chatGlobal));
             } else if (activeChatRoom === 'announce') {
                 chatAnnounce.push(newMsg);
-                localStorage.setItem('cronux_announcements', JSON.stringify(chatAnnounce));
+                localStorage.setItem('cronux_chat_announce', JSON.stringify(chatAnnounce));
             } else if (activeChatRoom === 'team') {
                 chatTeam.push(newMsg);
                 localStorage.setItem('cronux_chat_team', JSON.stringify(chatTeam));
@@ -614,7 +638,7 @@
                 if (activeChatRoom === 'global') renderChatRoomMessages();
                 else { unreadGlobal++; updateGlobalNavBadge(); playCuteNotificationSound(); }
             }
-            if (e.key === 'cronux_announcements') {
+            if (e.key === 'cronux_chat_announce') {
                 chatAnnounce = JSON.parse(e.newValue);
                 if (activeChatRoom === 'announce') renderChatRoomMessages();
                 else { unreadAnnounce++; updateGlobalNavBadge(); playCuteNotificationSound(); }
@@ -623,6 +647,11 @@
                 chatTeam = JSON.parse(e.newValue);
                 if (activeChatRoom === 'team') renderChatRoomMessages();
                 else { unreadTeam++; updateGlobalNavBadge(); playCuteNotificationSound(); }
+            }
+            if (e.key === 'cronux_scrims') {
+                scrimMatches = JSON.parse(e.newValue);
+                if (currentActiveTab === 'scrims') renderUserScrims();
+                if (currentActiveTab === 'adminDashboard') renderAdminDashboardLists();
             }
             if (e.key === 'cronux_approved') {
                 approvedUsers = JSON.parse(e.newValue);
@@ -737,6 +766,35 @@
             }
         }
 
+        // --- ADMIN SCRIM MANAGEMENT FUNCTIONS ---
+        function adminAddScrim(e) {
+            e.preventDefault();
+            const title = document.getElementById('admin-scrim-title').value;
+            const status = document.getElementById('admin-scrim-status').value;
+            scrimMatches.push({ id: Date.now(), title, status });
+            localStorage.setItem('cronux_scrims', JSON.stringify(scrimMatches));
+            document.getElementById('admin-scrim-title').value = '';
+            renderAdminDashboardLists();
+            alert('New scrim match published successfully!');
+        }
+
+        function toggleScrimStatus(id) {
+            let scrim = scrimMatches.find(s => s.id === id);
+            if (scrim) {
+                if (scrim.status === 'LIVE NOW') scrim.status = 'PENDING';
+                else if (scrim.status === 'PENDING') scrim.status = 'DONE';
+                else scrim.status = 'LIVE NOW';
+                localStorage.setItem('cronux_scrims', JSON.stringify(scrimMatches));
+                renderAdminDashboardLists();
+            }
+        }
+
+        function deleteScrim(id) {
+            scrimMatches = scrimMatches.filter(s => s.id !== id);
+            localStorage.setItem('cronux_scrims', JSON.stringify(scrimMatches));
+            renderAdminDashboardLists();
+        }
+
         function handleSignUp(e) {
             e.preventDefault();
             const name = document.getElementById('su-name').value;
@@ -833,7 +891,7 @@
             if (!list) return;
             list.innerHTML = scrimMatches.map(s => `
                 <div class="p-4 rounded-xl liquid-glass-card space-y-2">
-                    <span class="text-xs ${s.status === 'DONE' ? 'text-zinc-500' : 'text-cronuxGreen font-bold'}">${s.status}</span>
+                    <span class="text-xs ${s.status === 'DONE' ? 'text-zinc-500' : s.status === 'LIVE NOW' ? 'text-cronuxGreen font-bold animate-pulse' : 'text-amber-400 font-bold'}">${s.status}</span>
                     <h4 class="font-bold text-sm text-white">${s.title}</h4>
                     ${s.status !== 'DONE' ? `<button onclick="alert('Checked in successfully!')" class="w-full py-2 bg-cronuxGreen text-cronuxDark font-bold text-xs rounded-lg glow-btn">Check In</button>` : `<p class="text-[10px] text-zinc-500 italic">This match has concluded.</p>`}
                 </div>
@@ -844,6 +902,23 @@
             document.getElementById('stat-pending').innerText = pendingUsers.length;
             document.getElementById('stat-approved').innerText = approvedUsers.length;
             document.getElementById('stat-scrims').innerText = scrimMatches.length;
+
+            // Render Scrim Management List for Admin
+            const adminScrimsList = document.getElementById('admin-scrims-list');
+            if (adminScrimsList) {
+                adminScrimsList.innerHTML = scrimMatches.map(s => `
+                    <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
+                        <div>
+                            <span class="text-[9px] font-bold ${s.status === 'DONE' ? 'text-zinc-500' : s.status === 'LIVE NOW' ? 'text-cronuxGreen' : 'text-amber-400'}">${s.status}</span>
+                            <h5 class="font-bold text-white mt-0.5">${s.title}</h5>
+                        </div>
+                        <div class="flex space-x-1.5 items-center">
+                            <button onclick="toggleScrimStatus(${s.id})" class="px-2 py-1 bg-cronuxGreen/20 text-cronuxGreen font-semibold rounded text-[10px]">Status</button>
+                            <button onclick="deleteScrim(${s.id})" class="px-2 py-1 bg-red-500/20 text-red-400 font-semibold rounded text-[10px]">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
 
             document.getElementById('admin-pending-list').innerHTML = pendingUsers.length ? pendingUsers.map(u => `
                 <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
