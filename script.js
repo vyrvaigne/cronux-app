@@ -1,10 +1,6 @@
-// Safe Supabase Client Initialization
 const SUPABASE_URL = 'https://oxpbigvxfmwxeotsmtvo.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_hJMK6XqI6KFt_loXU9TF6g_Ykyl0yZZ';
-
-// Only declare supabase once globally
-window.cronuxSupabase = window.cronuxSupabase || window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const supabase = window.cronuxSupabase;
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const SOLE_ADMIN_EMAIL = "3xc@cronux.admin";
 const SOLE_ADMIN_PASS = "@Levi1225";
