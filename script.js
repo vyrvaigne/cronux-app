@@ -292,21 +292,25 @@ function playCyberAuthAnimation(titleText, subText, callback) {
     const sub = document.getElementById('cyber-auth-sub');
     const bar = document.getElementById('cyber-progress-bar');
 
-    title.innerText = titleText;
-    sub.innerText = subText;
-    bar.style.width = '0%';
-    overlay.classList.remove('hidden');
-    setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+    if (title) title.innerText = titleText;
+    if (sub) sub.innerText = subText;
+    if (bar) bar.style.width = '0%';
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+    }
 
     let progress = 0;
     const interval = setInterval(() => {
         progress += 10;
-        bar.style.width = `${progress}%`;
+        if (bar) bar.style.width = `${progress}%`;
         if (progress >= 100) {
             clearInterval(interval);
             setTimeout(() => {
-                overlay.classList.add('opacity-0');
-                setTimeout(() => overlay.classList.add('hidden'), 300);
+                if (overlay) {
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => overlay.classList.add('hidden'), 300);
+                }
                 if (callback) callback();
             }, 200);
         }
@@ -325,10 +329,12 @@ async function switchTab(tabName) {
             updateUIAccess();
             return;
         }
-        contentArea.innerHTML = tabs[tabName];
+        if (contentArea) contentArea.innerHTML = tabs[tabName];
         if (tabName === 'dashboard' && currentUser) {
-            document.getElementById('user-display-name').innerText = currentUser.name;
-            document.getElementById('user-role-badge').innerText = currentUser.role;
+            const dispName = document.getElementById('user-display-name');
+            const roleBadge = document.getElementById('user-role-badge');
+            if (dispName) dispName.innerText = currentUser.name;
+            if (roleBadge) roleBadge.innerText = currentUser.role;
         }
         if (tabName === 'adminDashboard') {
             renderAdminDashboardLists();
@@ -348,7 +354,7 @@ async function switchTab(tabName) {
         activeNav.classList.remove('text-zinc-400');
         activeNav.classList.add('text-cronuxGreen', 'scale-110');
     }
-    contentArea.scrollTop = 0;
+    if (contentArea) contentArea.scrollTop = 0;
     updateUIAccess();
 }
 
@@ -364,16 +370,17 @@ function openChatRoom(roomKey) {
 
     activeChatRoom = roomKey;
     const contentArea = document.getElementById('main-content');
-    contentArea.innerHTML = tabs['chatroom'];
+    if (contentArea) contentArea.innerHTML = tabs['chatroom'];
 
+    const roomTitle = document.getElementById('chatroom-title');
     if (roomKey === 'global') {
-        document.getElementById('chatroom-title').innerText = "Global Live Chat";
+        if (roomTitle) roomTitle.innerText = "Global Live Chat";
         unreadGlobal = 0;
     } else if (roomKey === 'announce') {
-        document.getElementById('chatroom-title').innerText = "Official Announcements";
+        if (roomTitle) roomTitle.innerText = "Official Announcements";
         unreadAnnounce = 0;
     } else if (roomKey === 'team') {
-        document.getElementById('chatroom-title').innerText = "CX Official Team GC";
+        if (roomTitle) roomTitle.innerText = "CX Official Team GC";
         unreadTeam = 0;
     }
     updateGlobalNavBadge();
@@ -384,6 +391,7 @@ function handleChatRoomKeyPress(e) { if (e.key === 'Enter') sendChatRoomMessage(
 async function sendChatRoomMessage() {
     if (!currentUser) return;
     const input = document.getElementById('chatroom-input');
+    if (!input) return;
     const msg = input.value.trim();
     if (!msg) return;
 
@@ -451,16 +459,21 @@ function updateInboxBadges() {
 }
 
 function switchAuthMode(mode) {
+    const suForm = document.getElementById('form-signup');
+    const liForm = document.getElementById('form-login');
+    const tabSu = document.getElementById('tab-signup');
+    const tabLi = document.getElementById('tab-login');
+
     if (mode === 'signup') {
-        document.getElementById('form-signup').classList.remove('hidden');
-        document.getElementById('form-login').classList.add('hidden');
-        document.getElementById('tab-signup').className = 'flex-1 text-cronuxGreen pb-1 border-b-2 border-cronuxGreen font-bold';
-        document.getElementById('tab-login').className = 'flex-1 text-zinc-400 pb-1';
+        if (suForm) suForm.classList.remove('hidden');
+        if (liForm) liForm.classList.add('hidden');
+        if (tabSu) tabSu.className = 'flex-1 text-cronuxGreen pb-1 border-b-2 border-cronuxGreen font-bold';
+        if (tabLi) tabLi.className = 'flex-1 text-zinc-400 pb-1';
     } else {
-        document.getElementById('form-signup').classList.add('hidden');
-        document.getElementById('form-login').classList.remove('hidden');
-        document.getElementById('tab-login').className = 'flex-1 text-cronuxGreen pb-1 border-b-2 border-cronuxGreen font-bold';
-        document.getElementById('tab-signup').className = 'flex-1 text-zinc-400 pb-1';
+        if (suForm) suForm.classList.add('hidden');
+        if (liForm) liForm.classList.remove('hidden');
+        if (tabLi) tabLi.className = 'flex-1 text-cronuxGreen pb-1 border-b-2 border-cronuxGreen font-bold';
+        if (tabSu) tabSu.className = 'flex-1 text-zinc-400 pb-1';
     }
 }
 
@@ -572,7 +585,7 @@ async function adminAddScrim(e) {
     const title = document.getElementById('admin-scrim-title').value;
     const status = document.getElementById('admin-scrim-status').value;
     
-    const { data, error } = await supabase.from('scrim_matches').insert([{ title, status }]).select();
+    const { data } = await supabase.from('scrim_matches').insert([{ title, status }]).select();
     if (data) scrimMatches.push(data[0]);
 
     document.getElementById('admin-scrim-title').value = '';
@@ -720,9 +733,12 @@ function renderUserScrims() {
 
 async function renderAdminDashboardLists() {
     await fetchCloudData();
-    document.getElementById('stat-pending').innerText = pendingUsers.length;
-    document.getElementById('stat-approved').innerText = approvedUsers.length;
-    document.getElementById('stat-teams-count').innerText = clanTeams.length;
+    const statPending = document.getElementById('stat-pending');
+    const statApproved = document.getElementById('stat-approved');
+    const statTeams = document.getElementById('stat-teams-count');
+    if (statPending) statPending.innerText = pendingUsers.length;
+    if (statApproved) statApproved.innerText = approvedUsers.length;
+    if (statTeams) statTeams.innerText = clanTeams.length;
 
     const adminTeamsList = document.getElementById('admin-teams-list');
     if (adminTeamsList) {
@@ -772,27 +788,33 @@ async function renderAdminDashboardLists() {
         `).join('');
     }
 
-    document.getElementById('admin-pending-list').innerHTML = pendingUsers.length ? pendingUsers.map(u => `
-        <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
-            <div><h5 class="font-bold text-white">${u.name}</h5><p class="text-[10px] text-zinc-400">${u.email}</p></div>
-            <div class="flex space-x-2">
-                <button onclick="acceptUser(${u.id})" class="px-2.5 py-1 bg-cronuxGreen text-cronuxDark font-bold rounded">Accept</button>
-                <button onclick="deleteUser(${u.id})" class="px-2.5 py-1 bg-red-500/20 text-red-400 rounded">Revoke</button>
+    const pendingList = document.getElementById('admin-pending-list');
+    if (pendingList) {
+        pendingList.innerHTML = pendingUsers.length ? pendingUsers.map(u => `
+            <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
+                <div><h5 class="font-bold text-white">${u.name}</h5><p class="text-[10px] text-zinc-400">${u.email}</p></div>
+                <div class="flex space-x-2">
+                    <button onclick="acceptUser(${u.id})" class="px-2.5 py-1 bg-cronuxGreen text-cronuxDark font-bold rounded">Accept</button>
+                    <button onclick="deleteUser(${u.id})" class="px-2.5 py-1 bg-red-500/20 text-red-400 rounded">Revoke</button>
+                </div>
             </div>
-        </div>
-    `).join('') : `<p class="text-xs text-zinc-500 italic p-2">No pending cloud applications.</p>`;
+        `).join('') : `<p class="text-xs text-zinc-500 italic p-2">No pending cloud applications.</p>`;
+    }
 
-    document.getElementById('admin-approved-list').innerHTML = approvedUsers.map(u => `
-        <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
-            <div><h5 class="font-bold text-white">${u.name}</h5><p class="text-[10px] text-zinc-400">${u.email} (${u.role})</p></div>
-            <div class="flex space-x-1 items-center">
-                ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleAnnounceAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessAnnounce ? 'bg-emerald-500/30 text-emerald-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]">Announce</button>` : ''}
-                ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleTeamAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessTeamGC ? 'bg-blue-500/30 text-blue-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]">Team</button>` : ''}
-                ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="makePasswordDefault(${u.id})" class="px-1.5 py-1 bg-amber-500/20 text-amber-300 font-semibold rounded text-[10px]">Default</button>` : ''}
-                ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="revokeUser(${u.id})" class="px-1.5 py-1 bg-red-500/20 text-red-400 rounded text-[10px]">Remove</button>` : '<span class="text-[10px] text-cronuxGreen font-bold">Owner</span>'}
+    const approvedList = document.getElementById('admin-approved-list');
+    if (approvedList) {
+        approvedList.innerHTML = approvedUsers.map(u => `
+            <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
+                <div><h5 class="font-bold text-white">${u.name}</h5><p class="text-[10px] text-zinc-400">${u.email} (${u.role})</p></div>
+                <div class="flex space-x-1 items-center">
+                    ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleAnnounceAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessAnnounce ? 'bg-emerald-500/30 text-emerald-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]">Announce</button>` : ''}
+                    ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="toggleTeamAccess(${u.id})" class="px-1.5 py-1 ${u.canAccessTeamGC ? 'bg-blue-500/30 text-blue-300' : 'bg-zinc-700 text-zinc-400'} font-semibold rounded text-[10px]">Team</button>` : ''}
+                    ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="makePasswordDefault(${u.id})" class="px-1.5 py-1 bg-amber-500/20 text-amber-300 font-semibold rounded text-[10px]">Default</button>` : ''}
+                    ${u.email !== SOLE_ADMIN_EMAIL ? `<button onclick="revokeUser(${u.id})" class="px-1.5 py-1 bg-red-500/20 text-red-400 rounded text-[10px]">Remove</button>` : '<span class="text-[10px] text-cronuxGreen font-bold">Owner</span>'}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
+    }
 }
 
 async function adminAddMember(e) {
@@ -834,16 +856,16 @@ function updateUIAccess() {
     const logoutBtn = document.getElementById('logout-btn');
 
     if (currentUser) {
-        nav.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
+        if (nav) nav.classList.remove('hidden');
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
     } else {
-        nav.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
+        if (nav) nav.classList.add('hidden');
+        if (logoutBtn) logoutBtn.classList.add('hidden');
     }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    fetchCloudData();
+    fetchCloudData().catch(e => console.log(e));
 
     if (currentUser && currentUser.role === 'Administrator') {
         switchTab('adminDashboard');
@@ -852,36 +874,18 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     updateUIAccess();
 
-    // Fallback safety timeout to ensure splash screen always clears in 1 second
+    // Guaranteed force-dismiss splash screen after 1 second
     setTimeout(() => {
         const splash = document.getElementById('splash-screen');
-        if (splash && splash.style.display !== 'none') {
+        const container = document.getElementById('app-container');
+        if (splash) {
             splash.style.opacity = '0';
             setTimeout(() => {
                 splash.style.display = 'none';
-                document.getElementById('app-container').classList.remove('opacity-0', 'pointer-events-none');
+                if (container) {
+                    container.classList.remove('opacity-0', 'pointer-events-none');
+                }
             }, 400);
         }
     }, 1000);
-
-    let progress = 0;
-    const loadInterval = setInterval(() => {
-        progress += 10;
-        if (progress >= 100) {
-            progress = 100;
-            clearInterval(loadInterval);
-            const splash = document.getElementById('splash-screen');
-            if (splash) {
-                splash.style.opacity = '0';
-                setTimeout(() => {
-                    splash.style.display = 'none';
-                    document.getElementById('app-container').classList.remove('opacity-0', 'pointer-events-none');
-                }, 500);
-            }
-        }
-        const bar = document.getElementById('progress-bar');
-        const pct = document.getElementById('loading-percent');
-        if (bar) bar.style.width = `${progress}%`;
-        if (pct) pct.innerText = `${progress}%`;
-    }, 50);
 });
