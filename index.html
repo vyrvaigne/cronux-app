@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>CRONUX - Official Clan X Community App</title>
+    <!-- PWA / Native App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#030504">
+    <link rel="apple-touch-icon" href="logoapp.png.jpg">
+    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -49,6 +55,7 @@
         body {
             background-color: #030504;
             background-image: radial-gradient(circle at 50% 20%, #0d2317 0%, #030504 70%);
+            -webkit-tap-highlight-color: transparent;
         }
 
         .liquid-glass-card {
@@ -68,13 +75,13 @@
         }
 
         .liquid-glass-header {
-            background: rgba(7, 11, 9, 0.75);
+            background: rgba(7, 11, 9, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }
 
         .liquid-glass-nav {
-            background: rgba(10, 16, 12, 0.8);
+            background: rgba(10, 16, 12, 0.9);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
         }
@@ -556,7 +563,6 @@
             const msg = input.value.trim();
             if (!msg) return;
 
-            // Restrict posting in announcements to Admin and Clan Master only
             if (activeChatRoom === 'announce' && currentUser.role !== 'Administrator' && currentUser.role !== 'Clan Master') {
                 alert('Only Admin and Clan Master can post announcements.');
                 return;
@@ -569,7 +575,7 @@
                 localStorage.setItem('cronux_chat_global', JSON.stringify(chatGlobal));
             } else if (activeChatRoom === 'announce') {
                 chatAnnounce.push(newMsg);
-                localStorage.setItem('cronux_chat_announce', JSON.stringify(chatAnnounce));
+                localStorage.setItem('cronux_announcements', JSON.stringify(chatAnnounce));
             } else if (activeChatRoom === 'team') {
                 chatTeam.push(newMsg);
                 localStorage.setItem('cronux_chat_team', JSON.stringify(chatTeam));
@@ -618,7 +624,7 @@
                 if (activeChatRoom === 'global') renderChatRoomMessages();
                 else { unreadGlobal++; updateGlobalNavBadge(); playCuteNotificationSound(); }
             }
-            if (e.key === 'cronux_chat_announce') {
+            if (e.key === 'cronux_announcements') {
                 chatAnnounce = JSON.parse(e.newValue);
                 if (activeChatRoom === 'announce') renderChatRoomMessages();
                 else { unreadAnnounce++; updateGlobalNavBadge(); playCuteNotificationSound(); }
@@ -630,7 +636,6 @@
             }
             if (e.key === 'cronux_approved') {
                 approvedUsers = JSON.parse(e.newValue);
-                // Keep current user state updated if admin toggled permissions
                 if (currentUser) {
                     let updatedMe = approvedUsers.find(u => u.email === currentUser.email);
                     if (updatedMe) {
@@ -714,7 +719,6 @@
             }
         }
 
-        // --- ADMIN TOGGLES FOR ANNOUNCEMENTS & TEAM GC ---
         function toggleAnnounceAccess(id) {
             let member = approvedUsers.find(u => u.id === id);
             if (member) {
@@ -861,7 +865,6 @@
                 </div>
             `).join('') : `<p class="text-xs text-zinc-500 italic p-2">No pending applications.</p>`;
 
-            // Admin approval controls for Announce & Team GC access
             document.getElementById('admin-approved-list').innerHTML = approvedUsers.map(u => `
                 <div class="p-3 rounded-xl liquid-glass-card flex justify-between items-center text-xs">
                     <div><h5 class="font-bold text-white">${u.name}</h5><p class="text-[10px] text-zinc-400">${u.email} (${u.role})</p></div>
@@ -888,7 +891,7 @@
             document.getElementById('admin-add-name').value = '';
             document.getElementById('admin-add-email').value = '';
             renderAdminDashboardLists();
-            alert('Member added successfully with default Global & Announcement access!');
+            alert('Member added successfully!');
         }
 
         function acceptUser(id) {
