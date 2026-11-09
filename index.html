@@ -225,6 +225,10 @@
             { id: 1, title: "6:00-8:00 PM • CX Zenith vs Team Nova", status: "LIVE NOW" }
         ];
 
+        let clanTeams = JSON.parse(localStorage.getItem('cronux_teams')) || [
+            { id: 1, name: "CX MAIN TEAM", captain: "Trix", handler: "Zach", members: ["Yuta"] }
+        ];
+
         let chatGlobal = JSON.parse(localStorage.getItem('cronux_chat_global')) || [
             { user_name: "trix", message: "Welcome to Cronux Global Chat!", time: "9:40 AM" }
         ];
@@ -337,10 +341,31 @@
                                 <span class="font-black text-white text-sm" id="stat-approved">0</span>
                             </div>
                             <div class="p-2 rounded-xl bg-black/40 border border-white/5">
-                                <span class="text-zinc-400 text-[9px] block uppercase">Scrims</span>
-                                <span class="font-black text-cronuxGreen text-sm" id="stat-scrims">0</span>
+                                <span class="text-zinc-400 text-[9px] block uppercase">Teams</span>
+                                <span class="font-black text-cronuxGreen text-sm" id="stat-teams-count">0</span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Admin: Create New Team -->
+                    <div class="p-4 rounded-xl liquid-glass-card border-cronuxGreen/40 space-y-3">
+                        <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-plus"></i> Create New Team
+                        </h3>
+                        <form onsubmit="adminAddTeam(event)" class="space-y-2">
+                            <input type="text" id="admin-team-name" placeholder="Team Name (e.g. CX Zenith)" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <input type="text" id="admin-team-captain" placeholder="Team Captain Gamertag" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <input type="text" id="admin-team-handler" placeholder="Team Handler Gamertag" required class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cronuxGreen">
+                            <button type="submit" class="w-full py-1.5 bg-cronuxGreen text-cronuxDark font-bold text-xs rounded-lg glow-btn">Create Team</button>
+                        </form>
+                    </div>
+
+                    <!-- Admin: Manage Teams & Rosters -->
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-xs text-cronuxGreen uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-users-rectangle"></i> Manage Teams & Designated Members
+                        </h3>
+                        <div id="admin-teams-list" class="space-y-3"></div>
                     </div>
 
                     <!-- Admin: Add Scrim Schedule Form -->
@@ -466,7 +491,12 @@
                     <div id="dynamic-members-list" class="space-y-2"></div>
                 </div>
             `,
-            teams: `<div class="p-4 rounded-xl liquid-glass-card"><h3 class="font-black text-white text-base">CX MAIN TEAM</h3><p class="text-xs text-zinc-400 mt-0.5">Captain: Trix | Handler: Zach</p></div>`,
+            teams: `
+                <div class="space-y-4 animate-fadeIn">
+                    <h3 class="font-bold text-sm text-white mb-2">Official Clan Teams & Rosters</h3>
+                    <div id="user-teams-list" class="space-y-3 pb-6"></div>
+                </div>
+            `,
             scrims: `
                 <div class="space-y-4 animate-fadeIn">
                     <h3 class="font-bold text-sm text-white mb-2">Active Scrim Matches</h3>
@@ -522,6 +552,7 @@
                     renderAdminDashboardLists();
                 }
                 if (tabName === 'members') renderLocalMembers();
+                if (tabName === 'teams') renderUserTeams();
                 if (tabName === 'scrims') renderUserScrims();
                 if (tabName === 'chats') updateInboxBadges();
             }
@@ -589,7 +620,7 @@
                 localStorage.setItem('cronux_chat_global', JSON.stringify(chatGlobal));
             } else if (activeChatRoom === 'announce') {
                 chatAnnounce.push(newMsg);
-                localStorage.setItem('cronux_announcements', JSON.stringify(chatAnnounce));
+                localStorage.setItem('cronux_chat_announce', JSON.stringify(chatAnnounce));
             } else if (activeChatRoom === 'team') {
                 chatTeam.push(newMsg);
                 localStorage.setItem('cronux_chat_team', JSON.stringify(chatTeam));
@@ -639,7 +670,7 @@
                 if (activeChatRoom === 'global') renderChatRoomMessages();
                 else { unreadGlobal++; updateGlobalNavBadge(); playCuteNotificationSound(); }
             }
-            if (e.key === 'cronux_announcements') {
+            if (e.key === 'cronux_chat_announce') {
                 chatAnnounce = JSON.parse(e.newValue);
                 if (activeChatRoom === 'announce') renderChatRoomMessages();
                 else { unreadAnnounce++; updateGlobalNavBadge(); playCuteNotificationSound(); }
@@ -658,6 +689,11 @@
             if (e.key === 'cronux_scrims') {
                 scrimMatches = JSON.parse(e.newValue);
                 if (currentActiveTab === 'scrims') renderUserScrims();
+                if (currentActiveTab === 'adminDashboard') renderAdminDashboardLists();
+            }
+            if (e.key === 'cronux_teams') {
+                clanTeams = JSON.parse(e.newValue);
+                if (currentActiveTab === 'teams') renderUserTeams();
                 if (currentActiveTab === 'adminDashboard') renderAdminDashboardLists();
             }
             if (e.key === 'cronux_approved') {
@@ -774,6 +810,74 @@
             }
         }
 
+        // --- ADMIN TEAM & ROSTER MANAGEMENT FUNCTIONS ---
+        function adminAddTeam(e) {
+            e.preventDefault();
+            const name = document.getElementById('admin-team-name').value;
+            const captain = document.getElementById('admin-team-captain').value;
+            const handler = document.getElementById('admin-team-handler').value;
+
+            clanTeams.push({ id: Date.now(), name, captain, handler, members: [] });
+            localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
+            
+            document.getElementById('admin-team-name').value = '';
+            document.getElementById('admin-team-captain').value = '';
+            document.getElementById('admin-team-handler').value = '';
+            renderAdminDashboardLists();
+            alert('New team created successfully!');
+        }
+
+        function editTeamLeadership(id) {
+            let team = clanTeams.find(t => t.id === id);
+            if (team) {
+                const newCap = prompt("Enter new Team Captain gamertag:", team.captain);
+                const newHand = prompt("Enter new Team Handler gamertag:", team.handler);
+                if (newCap !== null) team.captain = newCap.trim();
+                if (newHand !== null) team.handler = newHand.trim();
+                localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
+                renderAdminDashboardLists();
+                alert('Team leadership updated!');
+            }
+        }
+
+        function addMemberToTeam(teamId) {
+            let team = clanTeams.find(t => t.id === id => t.id === teamId);
+            // prompt for member gamertag to add
+            let memberName = prompt("Enter approved member's gamertag to designate to this team:");
+            if (!memberName) return;
+            
+            let foundMem = approvedUsers.find(u => u.name.toLowerCase() === memberName.toLowerCase().trim());
+            if (!foundMem) {
+                alert("Member not found in verified server members directory.");
+                return;
+            }
+
+            if (team.members.includes(foundMem.name)) {
+                alert("This member is already designated on this team.");
+                return;
+            }
+
+            team.members.push(foundMem.name);
+            localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
+            renderAdminDashboardLists();
+            alert(`${foundMem.name} successfully designated to ${team.name}!`);
+        }
+
+        function removeMemberFromTeam(teamId, memberName) {
+            let team = clanTeams.find(t => t.id === teamId);
+            if (team) {
+                team.members = team.members.filter(m => m !== memberName);
+                localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
+                renderAdminDashboardLists();
+            }
+        }
+
+        function deleteTeam(id) {
+            clanTeams = clanTeams.filter(t => t.id !== id);
+            localStorage.setItem('cronux_teams', JSON.stringify(clanTeams));
+            renderAdminDashboardLists();
+        }
+
         function adminAddScrim(e) {
             e.preventDefault();
             const title = document.getElementById('admin-scrim-title').value;
@@ -814,7 +918,6 @@
             }
 
             if (email.endsWith('@cronux.mem')) {
-                // Check if already pending or approved
                 let exists = approvedUsers.some(u => u.email === email) || pendingUsers.some(u => u.email === email);
                 if (exists) {
                     alert('An account with this email already exists or is pending review.');
@@ -901,6 +1004,25 @@
             `).join('');
         }
 
+        function renderUserTeams() {
+            const list = document.getElementById('user-teams-list');
+            if (!list) return;
+            list.innerHTML = clanTeams.map(t => `
+                <div class="p-4 rounded-xl liquid-glass-card space-y-2">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-black text-sm text-cronuxGreen">${t.name}</h4>
+                        <span class="text-[10px] text-zinc-400 font-mono">Captain: ${t.captain} | Handler: ${t.handler}</span>
+                    </div>
+                    <div class="pt-2 border-t border-white/10">
+                        <p class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Designated Roster Members:</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${t.members.length ? t.members.map(m => `<span class="px-2 py-0.5 bg-black/50 border border-cronuxGreen/30 text-white text-[10px] rounded-full">${m}</span>`).join('') : '<span class="text-[10px] text-zinc-500 italic">No members designated yet.</span>'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function renderUserScrims() {
             const list = document.getElementById('dynamic-scrims-list');
             if (!list) return;
@@ -916,7 +1038,40 @@
         function renderAdminDashboardLists() {
             document.getElementById('stat-pending').innerText = pendingUsers.length;
             document.getElementById('stat-approved').innerText = approvedUsers.length;
-            document.getElementById('stat-scrims').innerText = scrimMatches.length;
+            document.getElementById('stat-teams-count').innerText = clanTeams.length;
+
+            // Render Teams Management for Admin
+            const adminTeamsList = document.getElementById('admin-teams-list');
+            if (adminTeamsList) {
+                adminTeamsList.innerHTML = clanTeams.map(t => `
+                    <div class="p-3.5 rounded-xl liquid-glass-card space-y-2.5 text-xs">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h5 class="font-bold text-cronuxGreen text-sm">${t.name}</h5>
+                                <p class="text-[10px] text-zinc-400">Captain: <span class="text-white">${t.captain}</span> | Handler: <span class="text-white">${t.handler}</span></p>
+                            </div>
+                            <div class="flex space-x-1">
+                                <button onclick="editTeamLeadership(${t.id})" class="px-2 py-1 bg-cronuxGreen/20 text-cronuxGreen font-semibold rounded text-[10px]">Edit Lead</button>
+                                <button onclick="deleteTeam(${t.id})" class="px-2 py-1 bg-red-500/20 text-red-400 font-semibold rounded text-[10px]">Delete</button>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-white/10 space-y-1.5">
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] text-zinc-400 uppercase">Designated Members (${t.members.length})</span>
+                                <button onclick="addMemberToTeam(${t.id})" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded text-[10px]">+ Add Member</button>
+                            </div>
+                            <div class="flex flex-wrap gap-1">
+                                ${t.members.length ? t.members.map(m => `
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-black/50 border border-white/10 text-white text-[10px] rounded-full">
+                                        ${m}
+                                        <button onclick="removeMemberFromTeam(${t.id}, '${m}')" class="text-red-400 hover:text-red-300 ml-0.5"><i class="fa-solid fa-xmark text-[9px]"></i></button>
+                                    </span>
+                                `).join('') : '<span class="text-[10px] text-zinc-500 italic">No members assigned.</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
 
             const adminScrimsList = document.getElementById('admin-scrims-list');
             if (adminScrimsList) {
