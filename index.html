@@ -259,27 +259,6 @@
             }
         }
 
-        function playCuteNotificationSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime); 
-                oscillator.frequency.setValueAtTime(987.77, audioCtx.currentTime + 0.08);
-
-                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.3);
-            } catch (e) {}
-        }
-
         const tabs = {
             dashboard: `
                 <div class="space-y-5 animate-fadeIn">
@@ -1074,7 +1053,6 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // Non-blocking cloud fetch
             fetchCloudData();
 
             if (currentUser && currentUser.role === 'Administrator') {
@@ -1084,21 +1062,38 @@
             }
             updateUIAccess();
 
+            // Fallback safety timeout to ensure splash screen always clears in 1 second
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                if (splash && splash.style.display !== 'none') {
+                    splash.style.opacity = '0';
+                    setTimeout(() => {
+                        splash.style.display = 'none';
+                        document.getElementById('app-container').classList.remove('opacity-0', 'pointer-events-none');
+                    }, 400);
+                }
+            }, 1000);
+
             let progress = 0;
             const loadInterval = setInterval(() => {
-                progress += 5;
+                progress += 10;
                 if (progress >= 100) {
                     progress = 100;
                     clearInterval(loadInterval);
-                    document.getElementById('splash-screen').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('splash-screen').style.display = 'none';
-                        document.getElementById('app-container').classList.remove('opacity-0', 'pointer-events-none');
-                    }, 600);
+                    const splash = document.getElementById('splash-screen');
+                    if (splash) {
+                        splash.style.opacity = '0';
+                        setTimeout(() => {
+                            splash.style.display = 'none';
+                            document.getElementById('app-container').classList.remove('opacity-0', 'pointer-events-none');
+                        }, 500);
+                    }
                 }
-                document.getElementById('progress-bar').style.width = `${progress}%`;
-                document.getElementById('loading-percent').innerText = `${progress}%`;
-            }, 25);
+                const bar = document.getElementById('progress-bar');
+                const pct = document.getElementById('loading-percent');
+                if (bar) bar.style.width = `${progress}%`;
+                if (pct) pct.innerText = `${progress}%`;
+            }, 50);
         });
     </script>
 </body>
